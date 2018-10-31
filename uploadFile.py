@@ -1,6 +1,6 @@
 import tinys3, socket, pyinotify, os, time, threading, subprocess
 import imageEnhance as iE
-from decode import retKey
+from getKey import retKey
 
 # for getting the access and secret
 l = retKey()
