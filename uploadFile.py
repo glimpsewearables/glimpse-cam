@@ -1,10 +1,14 @@
 import tinys3, socket, pyinotify, os, time, threading, subprocess
 import imageEnhance as iE
+from decode import retKey
 
-access = ''
-secret = ''
+# for getting the access and secret
+l = retKey()
+access = l[0]
+secret = l[1]
 
-with open("./glimpsecam/camera/numFile.txt") as numFile:
+
+with open("./numFile.txt") as numFile:
 	int_list = [int(i) for i in numFile.readline().split()]
 
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='pi-1')
