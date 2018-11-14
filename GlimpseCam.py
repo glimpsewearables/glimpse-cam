@@ -9,6 +9,8 @@ prevState = False
 picture = True
 filename = "file.wav"
 held = False
+backlogUploadTime = time.time()
+
 
 sub.call('python /home/pi/glimpsecam/camera/uploadFile.py &',shell=True)
 sub.call('/home/pi/pikrellcam/pikrellcam &',shell=True)
@@ -71,18 +73,18 @@ while True:
 				break
 			prevState = currentState
 			time.sleep(0.01)
-		if held:
-			endtime = time.time() + 4
-			while time.time() < endtime:
-				if (not currentState):
-					held = False
-			if held:
-				GPIO.cleanup()
-				#sub.call("kill $(ps | grep bash | awk '{print $1}')",shell=True)
-				sub.call('python ./glimpsecam/camera/GlimpseCamLowPowerMode.py &', shell=True)
-				sub.call('pkill -f ./pikrellcam/pikrellcam', shell=True)
-				sub.call('pkill -f ./glimpsecam/camera/uploadFile.py', shell=True)
-				sub.call('pkill -f ./glimpsecam/camera/GlimpseCam.py', shell=True)
+		#if held:
+		#	endtime = time.time() + 4
+		#	while time.time() < endtime:
+		#		if (not currentState):
+		#			held = False
+		#	if held:
+		#		GPIO.cleanup()
+		#		#sub.call("kill $(ps | grep bash | awk '{print $1}')",shell=True)
+		#		sub.call('python ./glimpsecam/camera/GlimpseCamLowPowerMode.py &', shell=True)
+		#		sub.call('pkill -f ./pikrellcam/pikrellcam', shell=True)
+		#		sub.call('pkill -f ./glimpsecam/camera/uploadFile.py', shell=True)
+		#		sub.call('pkill -f ./glimpsecam/camera/GlimpseCam.py', shell=True)
 		if picture:
 			sub.call('echo "still" > /home/pi/pikrellcam/www/FIFO', shell=True)
 			GPIO.output(5, GPIO.HIGH)
@@ -99,5 +101,9 @@ while True:
 			time.sleep(0.25)
 			GPIO.output(5, GPIO.LOW)
 			time.sleep(10)
+	if time.time() >= backlogUploadTime + 600:
+		backlogUploadTime = time.time()
+		print 'Uploading backlog'
+		sub.call('python ./glimpsecam/camera/uploadBacklog.py &', shell=True)
 	time.sleep(0.01)
 	prevState = currentState
