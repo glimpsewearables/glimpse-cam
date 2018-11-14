@@ -29,3 +29,17 @@ class log:
 
     def getLogger(self):
         return self.logger
+
+if __name__ == "__main__":
+    # example of creating a log file "testLog"
+    # the second input boolean value determines if overrite the log file
+    # True: overrwrite False: cumulative log info
+
+    # get an instance of log class
+    l = log("testLog", True)
+    # get the logger
+    logger = l.getLogger()
+    # log info according to different degree
+    # google pythonn log level for more information
+    logger.error("test")
+    logger.info("test info")
