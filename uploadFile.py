@@ -2,14 +2,14 @@
 
 import tinys3, socket, pyinotify, os, time, threading, subprocess
 import imageEnhance as iE
-from getKey import retKey
+from decode import retKey
 
 # for getting the access and secret
 l = retKey()
 access = l[0]
 secret = l[1]
 
-with open("./glimpsecam/camera/numFile.txt") as numFile:
+with open("./glimpse-cam/numFile.txt") as numFile:
 	int_list = [int(i) for i in numFile.readline().split()]
 
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='pi-1')
@@ -58,7 +58,7 @@ class EventHandler(pyinotify.ProcessEvent):
 			os.rename(event.pathname, path + '/%05d' % int_list[1] + filename)
 			int_list[1] -= 1
 		time.sleep(0.01)
-		with open('./glimpsecam/camera/numFile.txt','w') as numFile:
+		with open('./glimpse-cam/numFile.txt','w') as numFile:
 			numFile.write(str(int_list[0]) + ' ' + str(int_list[1]))
 
 handler = EventHandler()

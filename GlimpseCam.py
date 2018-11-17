@@ -12,7 +12,7 @@ held = False
 backlogUploadTime = time.time()
 
 
-sub.call('python /home/pi/glimpsecam/camera/uploadFile.py &',shell=True)
+sub.call('python /home/pi/glimpse-cam/uploadFile.py &',shell=True)
 sub.call('/home/pi/pikrellcam/pikrellcam &',shell=True)
 time.sleep(3)
 
@@ -104,6 +104,6 @@ while True:
 	if time.time() >= backlogUploadTime + 600:
 		backlogUploadTime = time.time()
 		print 'Uploading backlog'
-		sub.call('python ./glimpsecam/camera/uploadBacklog.py &', shell=True)
+		sub.call('python ./glimpse-cam/uploadBacklog.py &', shell=True)
 	time.sleep(0.01)
 	prevState = currentState

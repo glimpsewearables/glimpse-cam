@@ -7,7 +7,7 @@ def retKey():
     access = ""
     secret = ""
 
-    with open("access.txt", "r") as f:
+    with open("/home/pi/glimpse-cam/access.txt", "r") as f:
         lines = f.readlines()
         lines = [x.strip('\n') for x in lines]
 
@@ -16,7 +16,7 @@ def retKey():
         num += ord("F")
         access += chr(num)
 
-    with open("secret.txt", "r") as f:
+    with open("/home/pi/glimpse-cam/secret.txt", "r") as f:
         lines = f.readlines()
         lines = [x.strip('\n') for x in lines]
 
