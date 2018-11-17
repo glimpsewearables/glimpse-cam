@@ -107,7 +107,7 @@ pip install geocoder
 pip install tinys3
 sudo apt-get install python-setuptools
 sudo easy_install pyinotify
-echo '#./glimpsecam/camera/GlimpseCamLowPowerMode.py & ./glimpsecam/camera/monitor.sh & ./glimpsecam/camera/ip.sh' >> .bashrc
+echo '#./glimpse-cam/GlimpseCam.py & ./glimpse-cam/monitor.sh' >> .bashrc
 >newFiles.txt
 
 echo "Congradulations! The Setup is now complete!"
