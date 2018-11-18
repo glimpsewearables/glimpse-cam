@@ -4,6 +4,6 @@ do
 	uptime -p >> battery.csv
 	date >> battery.csv
 	hostname -I >> battery.csv
-	aws s3 cp "battery.csv" s3://pi-1/$(hostname)/
+	python -c "import tinys3, socket, sys; sys.path.insert(0, '/home/pi/glimpse-cam'); import decode; A=decode.retKey(); conn=tinys3.Connection(A[0],A[1],tls=True,default_bucket='pi-1'); f=open('battery.csv','rb'); conn.upload(socket.gethostname()+'/battery.csv',f);"
 	sleep 60
 done
