@@ -5,9 +5,6 @@ echo "* Developed by Tianhao Zhang *"
 echo "* Copyright (C) 2018         *"
 echo "******************************"
 echo ""
-echo "NOTE:"
-echo "PLEASE PUT THIS SCRIPT INTO HOME DIRECTORY"
-echo ""
 
 if [ $# -eq 0 ]; then
 	echo "Which Module(s) Would You Like to Install?"
@@ -35,6 +32,7 @@ if [ $ANSWER -eq 1 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
 	echo "UPDATE TO LATEST RASPBIAN"
 	echo "-----------------------------"
 	echo ""
+	cd /home/pi
 	sudo apt-get install
 	sudo apt-get update
 fi
@@ -51,21 +49,21 @@ if [ $ANSWER -eq 2 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
 	cd pikrellcam
 	chmod u+rwx install-pikrellcam.sh
 	./install-pikrellcam.sh
-	sudo mv /home/pi/glimpsecam/camera/sh/pikrellcam.conf /home/pi/.pikrellcam/pikrellcam.conf
+	sudo mv /home/pi/glimpse-cam/sh/pikrellcam.conf /home/pi/.pikrellcam/pikrellcam.conf
 fi
 
 # Install AWS CLI
 if [ $ANSWER -eq 3 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
-	echo ""
-	echo "-----------------------------"
-	echo "INSTALL AWS CLI"
-	echo "-----------------------------"
-	echo ""
-	cd /home/pi
-	curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
-	unzip awscli-bundle.zip
-	sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
-	aws configure
+	#echo ""
+	#echo "-----------------------------"
+	#echo "INSTALL AWS CLI"
+	#echo "-----------------------------"
+	#echo ""
+	#cd /home/pi
+	#curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+	#unzip awscli-bundle.zip
+	#sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+	#aws configure
 fi
 
 # Personalization
@@ -87,23 +85,23 @@ fi
 
 # Install Dropbox Uploader
 if [ $ANSWER -eq 5 -o $ANSWER -eq 7 ]; then
-	echo "-----------------------------"
-	echo "Install Dropbox"
-	echo "-----------------------------"
-	echo ""
-	cd /home/pi
-	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
-	cd Dropbox-Uploader
-	chmod u+rwx dropbox_uploader.sh
-	echo "-------"
-	echo "Note:"
-	echo "Access Token is "
-	echo "-------"
-	./dropbox_uploader.sh
+	#echo "-----------------------------"
+	#echo "Install Dropbox"
+	#echo "-----------------------------"
+	#echo ""
+	#cd /home/pi
+	#git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
+	#cd Dropbox-Uploader
+	#chmod u+rwx dropbox_uploader.sh
+	#echo "-------"
+	#echo "Note:"
+	#echo "Access Token is "
+	#echo "-------"
+	#./dropbox_uploader.sh
 fi
 # Install file upload dependencies
 cd /home/pi
-pip install geocoder
+# pip install geocoder
 pip install tinys3
 sudo apt-get install python-setuptools
 sudo easy_install pyinotify
