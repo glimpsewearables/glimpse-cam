@@ -4,7 +4,7 @@ import time, datetime, os, glob, socket, tinys3, threading, socket
 from shutil import copyfile
 import RPi.GPIO as GPIO
 import subprocess as sub
-from decode import retKey
+from getLines import retKey
 
 # for getting the access and secret
 l = retKey()
