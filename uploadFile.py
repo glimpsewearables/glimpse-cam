@@ -6,7 +6,7 @@ from getLines import retKey
 from logger import log
 
 # Sets up log
-jack = log("errorLog", False).getlogger()
+logger = log.log("errorLog", False).getlogger()
 
 # Getting Access/Secret Keys
 l = retKey()
@@ -42,16 +42,16 @@ class EventHandler(pyinotify.ProcessEvent):
 				# Tries uploading. If there is no wifi, backlog the file to upload later
 				try:
 					if subprocess.check_output(['hostname','-I']).isspace():
-						jack.error("No wifi found.")
+						logger.error("No wifi found.")
 						raise NoWiFiException()
 					conn.upload(socket.gethostname() + '/' + ('images' if (type == '.jpg') else 'videos') + '/' + filename, f)
 					print 'success'
-					jack.info(filename + " uploaded successfully.")
+					logger.info(filename + " uploaded successfully.")
 				except:
 					with open('/home/pi/newFiles.txt','a') as file:
 						file.write(event.pathname+'\n')
 					print 'failure'
-					jack.warning(filename + " failed to upload.")
+					logger.warning(filename + " failed to upload.")
 		threading.Thread(target=__upload, args=[]).start()
 
 	# When a file is created in one of the directories, rename/process the file
