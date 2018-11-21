@@ -7,7 +7,7 @@ from getLines import retKey
 from logger import log
 
 # Sets up log
-logger = log.log("errorLog", False).getLogger()
+logger = log("errorLog", False).getLogger()
 
 # for getting the access and secret
 l = retKey()
