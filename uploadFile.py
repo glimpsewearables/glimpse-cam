@@ -12,7 +12,7 @@ secret = l[1]
 with open("./glimpse-cam/numFile.txt") as numFile:
 	int_list = [int(i) for i in numFile.readline().split()]
 
-conn = tinys3.Connection(access, secret, tls=True, default_bucket='pi-1')
+conn = tinys3.Connection(access, secret, tls=True, default_bucket='pi-5')
 
 watchman = pyinotify.WatchManager()
 
