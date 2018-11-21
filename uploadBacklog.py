@@ -14,7 +14,7 @@ secret = l[1]
 held = False
 prevState = False
 
-conn = tinys3.Connection(access, secret, tls=True, default_bucket = 'pi-1')
+conn = tinys3.Connection(access, secret, tls=True, default_bucket = 'pi-5')
 
 copyfile('/home/pi/newFiles.txt','/home/pi/FilesToUpload.txt')
 with open('/home/pi/FilesToUpload.txt') as f:
