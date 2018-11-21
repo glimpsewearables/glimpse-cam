@@ -19,6 +19,7 @@ backlogUploadTime = time.time()
 # Start pikrellcam and directory watcher
 sub.call('python /home/pi/glimpse-cam/uploadFile.py &',shell=True)
 sub.call('/home/pi/pikrellcam/pikrellcam &',shell=True)
+jack.info("Camera initialized.")
 time.sleep(3)
 
 #BOOT TEST GOES HERE
