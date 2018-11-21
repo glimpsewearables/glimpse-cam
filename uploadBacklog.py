@@ -30,7 +30,7 @@ def __upload(file):
 	with open(file, 'rb') as f:
 		try:
 			if sub.check_output(['hostname','-I']).isspace():
-				jack.error("No wifi found.")
+				jack.error("No wifi found when uploading backlog.")
 				raise NoWiFiException()
 			conn.upload(socket.gethostname() + '/' + ('images' if (type == '.jpg') else 'videos') + '/' + filename, f)
 			print 'successful upload'
