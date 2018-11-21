@@ -7,7 +7,7 @@ from getLines import retKey
 from logger import log
 
 # Sets up log
-jack = log("errorLog", False).getlogger()
+logger = log.log("errorLog", False).getlogger()
 
 # for getting the access and secret
 l = retKey()
@@ -30,16 +30,16 @@ def __upload(file):
 	with open(file, 'rb') as f:
 		try:
 			if sub.check_output(['hostname','-I']).isspace():
-				jack.error("No wifi found when uploading backlog.")
+				logger.error("No wifi found when uploading backlog.")
 				raise NoWiFiException()
 			conn.upload(socket.gethostname() + '/' + ('images' if (type == '.jpg') else 'videos') + '/' + filename, f)
 			print 'successful upload'
-			jack.info(filename + " uploaded successfully from backlog.")
+			logger.info(filename + " uploaded successfully from backlog.")
 		except:
 			with open('/home/pi/newFiles.txt','a') as newfile:
 				newfile.write(file+'\n')
 			print 'wrote '+file+' to newFiles.txt'
-			jack.warning(filename + " failed to upload from backlog.")
+			logger.warning(filename + " failed to upload from backlog.")
 
 while content:
 	threading.Thread(target=__upload, args=[content.pop(0)]).start()
