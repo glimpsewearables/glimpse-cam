@@ -6,7 +6,7 @@ import subprocess as sub
 from logger import log
 
 # Sets up log
-logger = log.log("errorLog", False).getlogger()
+logger = log.log("errorLog", False).getLogger()
 logger.info("Device started.")
 
 # Initialize variables
