@@ -56,28 +56,26 @@ class EventHandler(pyinotify.ProcessEvent):
 
 	# When a file is created in one of the directories, rename/process the file
 	def process_IN_CREATE(self, event):
-		def __process():
-			type = event.pathname[-4:]
-			path = os.path.dirname(event.pathname)
-			if type == '.jpg':
-				time.sleep(1)
-				iE.simpleImageEnhance(event.pathname, event.pathname)
-				filename = os.path.basename(event.pathname)
-				time.sleep(1)
-				os.rename(event.pathname, path + '/%05d' % int_list[0] + filename)
-				int_list[0] -= 1
-			elif type == '.mp4':
-				#print 'video was created: ', event.pathname
-				time.sleep(10)
-				filename = os.path.basename(event.pathname)
-				time.sleep(1)
-				os.rename(event.pathname, path + '/%05d' % int_list[1] + filename)
-				int_list[1] -= 1
-			time.sleep(0.01)
-			# Update file numbering
-			with open('./glimpse-cam/numFile.txt','w') as numFile:
-				numFile.write(str(int_list[0]) + ' ' + str(int_list[1]))
-		threading.Thread(target=__process, args=[]).start()
+		type = event.pathname[-4:]
+		path = os.path.dirname(event.pathname)
+		if type == '.jpg':
+			time.sleep(1)
+			iE.simpleImageEnhance(event.pathname, event.pathname)
+			filename = os.path.basename(event.pathname)
+			time.sleep(1)
+			os.rename(event.pathname, path + '/%05d' % int_list[0] + filename)
+			int_list[0] -= 1
+		elif type == '.mp4':
+			#print 'video was created: ', event.pathname
+			time.sleep(10)
+			filename = os.path.basename(event.pathname)
+			time.sleep(1)
+			os.rename(event.pathname, path + '/%05d' % int_list[1] + filename)
+			int_list[1] -= 1
+		time.sleep(0.01)
+		# Update file numbering
+		with open('./glimpse-cam/numFile.txt','w') as numFile:
+			numFile.write(str(int_list[0]) + ' ' + str(int_list[1]))
 
 handler = EventHandler()
 notifier = pyinotify.Notifier(watchman, handler)
