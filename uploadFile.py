@@ -28,7 +28,6 @@ mask = pyinotify.IN_MOVED_TO | pyinotify.IN_CREATE
 
 # Exception for if there is no Wifi
 class NoWiFiException(Exception):
-	jack.error("No wifi found.")
 	pass
 
 # Main class that processes files and uploads them
@@ -43,7 +42,8 @@ class EventHandler(pyinotify.ProcessEvent):
 				# Tries uploading. If there is no wifi, backlog the file to upload later
 				try:
 					if subprocess.check_output(['hostname','-I']).isspace():
-						raise NoWiFiException
+						jack.error("No wifi found.")
+						raise NoWiFiException()
 					conn.upload(socket.gethostname() + '/' + ('images' if (type == '.jpg') else 'videos') + '/' + filename, f)
 					print 'success'
 					jack.info(filename + " uploaded successfully.")
