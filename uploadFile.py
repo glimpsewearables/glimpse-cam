@@ -25,10 +25,6 @@ data["ranking"] = 1
 data["raw_or_edited"] = "raw"
 data["user_id"] = socket.gethostname()[4:]
 
-# Numbering for images/videos
-with open("./glimpse-cam/numFile.txt") as numFile:
-	int_list = [int(i) for i in numFile.readline().split()]
-
 # Starts aws s3 conncetion
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content')
 
@@ -36,7 +32,7 @@ conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-con
 watchman = pyinotify.WatchManager()
 
 # Mask for events that occur in the directories
-mask = pyinotify.IN_MOVED_TO | pyinotify.IN_CREATE
+mask = pyinotify.IN_CLOSE_WRITE
 
 # Exception for if there is no Wifi
 class NoWiFiException(Exception):
@@ -45,7 +41,7 @@ class NoWiFiException(Exception):
 # Main class that processes files and uploads them
 class EventHandler(pyinotify.ProcessEvent):
 	# Uploads a file that is moved into one of the directories after renaming/processing
-	def process_IN_MOVED_TO(self, event):
+	def process_IN_CLOSE_WRITE(self, event):
 		def __upload():
 			# Gets file type
             		type = event.pathname[-4:]
@@ -72,29 +68,6 @@ class EventHandler(pyinotify.ProcessEvent):
 					print 'failure'
 					logger.warning(filename + " failed to upload.")
 		threading.Thread(target=__upload, args=[]).start()
-
-	# When a file is created in one of the directories, rename/process the file
-	def process_IN_CREATE(self, event):
-		type = event.pathname[-4:]
-		path = os.path.dirname(event.pathname)
-		if type == '.jpg':
-			time.sleep(1)
-			#iE.simpleImageEnhance(event.pathname, event.pathname)
-			filename = os.path.basename(event.pathname)
-			time.sleep(1)
-			os.rename(event.pathname, path + '/%05d' % int_list[0] + filename)
-			int_list[0] -= 1
-		elif type == '.mp4':
-			#print 'video was created: ', event.pathname
-			time.sleep(10)
-			filename = os.path.basename(event.pathname)
-			time.sleep(1)
-			os.rename(event.pathname, path + '/%05d' % int_list[1] + filename)
-			int_list[1] -= 1
-		time.sleep(0.01)
-		# Update file numbering
-		with open('./glimpse-cam/numFile.txt','w') as numFile:
-			numFile.write(str(int_list[0]) + ' ' + str(int_list[1]))
 
 handler = EventHandler()
 notifier = pyinotify.Notifier(watchman, handler)
