@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time, datetime, os, glob, socket
-import RPi.GPIO as GPIO
+import.GPIO as GPIO
 import subprocess as sub
 from logger import log
 

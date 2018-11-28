@@ -1,0 +1,8 @@
+# Test (in order) Buzzer, button, microphone, then camera
+# Run buzzer to beep repeatedly
+# Stop with button-press
+# Sleep for two seconds
+# Have buzzer vibrate with frequency proportional to loudness
+# Button press to continue
+# Standard camera tests. Button push -> photo, double tap -> video
+# end of test script
