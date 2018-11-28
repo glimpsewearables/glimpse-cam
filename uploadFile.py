@@ -67,7 +67,7 @@ class EventHandler(pyinotify.ProcessEvent):
 					requests.post(url=API_ENDPOINT,data=json_data)
 					logger.info("metadata for " + filename + " uploaded successfully.")
 				except:
-					with open('/home/pi/newFiles.txt','a') as file:
+					with open('/home/pi/FilesToUpload.txt','a') as file:
 						file.write(event.pathname+'\n')
 					print 'failure'
 					logger.warning(filename + " failed to upload.")
