@@ -59,17 +59,18 @@ class EventHandler(pyinotify.ProcessEvent):
 					conn.upload(filename, f)
 					print 'success'
 					logger.info(filename + " uploaded successfully.")
+					data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
+					data["created_at"] = str(datetime.datetime.now().isoformat('T'))
+					data["updated_at"] = str(datetime.datetime.now().isoformat('T'))
+					data["media_type"] = "image" if (type == '.jpg') else "video"
+					json_data = json.dumps(data)
+					requests.post(url=API_ENDPOINT,data=json_data)
+					logger.info("metadata for " + filename + " uploaded successfully.")
 				except:
 					with open('/home/pi/newFiles.txt','a') as file:
 						file.write(event.pathname+'\n')
 					print 'failure'
 					logger.warning(filename + " failed to upload.")
-			data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
-			data["created_at"] = datetime.datetime.now().isoformat('T')
-			data["updated_at"] = datetime.datetime.now().isoformat('T')
-			data["media_type"] = "image" if (type == '.jpg') else "video"
-			json_data = json.dumps(data)
-			r = requests.post(url=API_ENDPOINT,data=json_data)
 		threading.Thread(target=__upload, args=[]).start()
 
 	# When a file is created in one of the directories, rename/process the file
