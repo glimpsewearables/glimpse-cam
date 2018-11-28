@@ -45,28 +45,29 @@ class EventHandler(pyinotify.ProcessEvent):
 		def __upload():
 			# Gets file type
             		type = event.pathname[-4:]
-			filename = os.path.basename(event.pathname)
-			with open(event.pathname, 'rb') as f:
-				# Tries uploading. If there is no wifi, backlog the file to upload later
-				try:
-					if subprocess.check_output(['hostname','-I']).isspace():
-						logger.error("No wifi found.")
-						raise NoWiFiException()
-					conn.upload(filename, f)
-					print 'success'
-					logger.info(filename + " uploaded successfully.")
-					data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
-					data["created_at"] = str(datetime.datetime.now().isoformat('T'))
-					data["updated_at"] = str(datetime.datetime.now().isoformat('T'))
-					data["media_type"] = "image" if (type == '.jpg') else "video"
-					json_data = json.dumps(data)
-					requests.post(url=API_ENDPOINT,data=json_data)
-					logger.info("metadata for " + filename + " uploaded successfully.")
-				except:
-					with open('/home/pi/FilesToUpload.txt','a') as file:
-						file.write(event.pathname+'\n')
-					print 'failure'
-					logger.warning(filename + " failed to upload.")
+			if type==".jpg" or type==".mp4":
+				filename = os.path.basename(event.pathname)
+				with open(event.pathname, 'rb') as f:
+					# Tries uploading. If there is no wifi, backlog the file to upload later
+					try:
+						if subprocess.check_output(['hostname','-I']).isspace():
+							logger.error("No wifi found.")
+							raise NoWiFiException()
+						conn.upload(filename, f)
+						print 'success'
+						logger.info(filename + " uploaded successfully.")
+						data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
+						data["created_at"] = str(datetime.datetime.now().isoformat('T'))
+						data["updated_at"] = str(datetime.datetime.now().isoformat('T'))
+						data["media_type"] = "image" if (type == '.jpg') else "video"
+						json_data = json.dumps(data)
+						requests.post(url=API_ENDPOINT,data=json_data)
+						logger.info("metadata for " + filename + " uploaded successfully.")
+					except:
+						with open('/home/pi/FilesToUpload.txt','a') as file:
+							file.write(event.pathname+'\n')
+						print 'failure'
+						logger.warning(filename + " failed to upload.")
 		threading.Thread(target=__upload, args=[]).start()
 
 handler = EventHandler()
