@@ -49,7 +49,7 @@ class EventHandler(pyinotify.ProcessEvent):
 	def process_IN_MOVED_TO(self, event):
 		def __upload():
 			# Gets file type
-            type = event.pathname[-4:]
+            		type = event.pathname[-4:]
 			filename = os.path.basename(event.pathname)
 			with open(event.pathname, 'rb') as f:
 				# Tries uploading. If there is no wifi, backlog the file to upload later
@@ -65,12 +65,12 @@ class EventHandler(pyinotify.ProcessEvent):
 						file.write(event.pathname+'\n')
 					print 'failure'
 					logger.warning(filename + " failed to upload.")
-            data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
-            data["created_at"] = datetime.datetime.now().isoformat('T')
-            data["updated_at"] = datetime.datetime.now().isoformat('T')
-            data["media_type"] = "image" if (type == '.jpg') else "video"
-            json_data = json.dumps(data)
-            r = requests.post(url=API_ENDPOINT,data=json_data)
+			data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
+			data["created_at"] = datetime.datetime.now().isoformat('T')
+			data["updated_at"] = datetime.datetime.now().isoformat('T')
+			data["media_type"] = "image" if (type == '.jpg') else "video"
+			json_data = json.dumps(data)
+			r = requests.post(url=API_ENDPOINT,data=json_data)
 		threading.Thread(target=__upload, args=[]).start()
 
 	# When a file is created in one of the directories, rename/process the file
