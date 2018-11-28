@@ -18,13 +18,12 @@ API_ENDPOINT = "http://52.32.199.147:8000/api/media/"
 
 # Setting up dictionary for json data
 data = {}
-data["device_id"] = socket.gethostname()[5:]
+data["device_id"] = socket.gethostname()[4:]
 data["downloaded"] = 0
 data["event_id"] = 1
 data["ranking"] = 1
 data["raw_or_edited"] = "raw"
-data["user_id"] = socket.gethostname()[5:]
-
+data["user_id"] = socket.gethostname()[4:]
 
 # Numbering for images/videos
 with open("./glimpse-cam/numFile.txt") as numFile:
