@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time, datetime, os, glob, socket
-import RPi.GPIO as GPIO
+import RPI.GPIO as GPIO
 import subprocess as sub
 from logger import log
 
@@ -103,7 +103,7 @@ while True:
 	if time.time() >= backlogUploadTime + 600:
 		logger.info("Attempting to upload backlog.")
 		backlogUploadTime = time.time()
-		print 'Uploading backlog'
+		print('Uploading backlog')
 		sub.call('python ./glimpse-cam/uploadBacklog.py &', shell=True)
 	time.sleep(0.01)
 	prevState = currentState
