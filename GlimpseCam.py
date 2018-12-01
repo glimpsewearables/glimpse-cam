@@ -89,7 +89,7 @@ while True:
 			GPIO.output(5, GPIO.LOW)
 			time.sleep(1)
 		else:
-			sub.call('echo "record on 5 5" > /home/pi/pikrellcam/www/FIFO', shell=True)
+			sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
 			logger.info("Video taken.")
 			GPIO.output(5, GPIO.HIGH)
 			time.sleep(0.25)
