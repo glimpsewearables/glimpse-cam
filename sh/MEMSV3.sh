@@ -60,7 +60,7 @@ elif [ -e boot3.zth ]; then
 	echo "boot3.zth Exists"
 	echo "Continue Installation Process..."
 	rm boot3.zth
-	wget https://raw.githubusercontent.com/vikramsringari/glimpsecam/master/camera/sh/asoundrc
+	wget https://raw.githubusercontent.com/glimpsewearables/glimpse-cam/master/sh/asoundrc
 	sudo mv asoundrc ~/.asoundrc
 	timeout 3 arecord -D dmic_sv -c2 -r 44100 -f S32_LE -t wav -V mono -v file.wav
 	cd /home/pi
