@@ -60,7 +60,7 @@ if [ $ANSWER -eq 3 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
 	sudo dpkg-reconfigure tzdata
 	echo "-----------------------------"
 	echo "Please Change the Default Password and "
-	echo "Enable the Camera, SSH, and VNC through Interface Options."
+	echo "Enable the Camera, SSH, and I2S through Interface Options."
 	echo "-----------------------------"
 	sleep 3
 	sudo raspi-config
