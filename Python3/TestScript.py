@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+        #!/usr/bin/env python
 
 # Test (in order) Buzzer, button, microphone, then camera
 # Run buzzer to beep repeatedly
