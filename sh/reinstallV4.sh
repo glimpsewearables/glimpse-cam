@@ -18,7 +18,7 @@ else
 	ANSWER=$1
 fi
 
-if [[ $ANSWER != [1-7] ]]; then
+if [[ $ANSWER != [1-4] ]]; then
 	echo "INVALID SELECTION!"
 	exit 1
 fi
@@ -72,7 +72,7 @@ cd /home/pi
 pip install tinys3
 sudo apt-get install python-setuptools
 sudo easy_install pyinotify
-echo '#./glimpse-cam/GlimpseCam.py & ./glimpse-cam/monitor.sh' >> .bashrc
+echo '#./glimpse-cam/GlimpseCam.py' >> .bashrc
 >newFiles.txt
 
 echo "Congradulations! The Setup is now complete!"
