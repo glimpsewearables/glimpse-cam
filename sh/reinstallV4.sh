@@ -24,7 +24,7 @@ if [[ $ANSWER != [1-4] ]]; then
 fi
 
 # Update to Latest Version Raspbian
-if [ $ANSWER -eq 1 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
+if [ $ANSWER -eq 1 -o $ANSWER -eq 4 ]; then
 	echo ""
 	echo "-----------------------------"
 	echo "UPDATE TO LATEST RASPBIAN"
@@ -36,7 +36,7 @@ if [ $ANSWER -eq 1 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
 fi
 
 # Install Pikrellcam library
-if [ $ANSWER -eq 2 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
+if [ $ANSWER -eq 2 -o $ANSWER -eq 4 ]; then
 	echo ""
 	echo "-----------------------------"
 	echo "INSTALL PIKRELLCAM LIBRARY"
@@ -51,7 +51,7 @@ if [ $ANSWER -eq 2 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
 fi
 
 # Personalization
-if [ $ANSWER -eq 3 -o $ANSWER -eq 6 -o $ANSWER -eq 7 ]; then
+if [ $ANSWER -eq 3 -o $ANSWER -eq 4 ]; then
 	echo ""
 	echo "-----------------------------"
 	echo "Please Set Up the TimeZone Information."
