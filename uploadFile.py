@@ -14,7 +14,7 @@ access = l[0]
 secret = l[1]
 
 # API endpoint to send data
-API_ENDPOINT = "http://52.32.199.147:8000/api/media/"
+API_ENDPOINT = "http://52.88.225.198:8000/api/media/"
 
 # Setting up dictionary for json data
 data = {}
