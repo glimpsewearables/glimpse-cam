@@ -1,4 +1,4 @@
-        #!/usr/bin/env python
+#!/usr/bin/env python
 
 # Test (in order) Buzzer, button, microphone, then camera
 # Run buzzer to beep repeatedly
@@ -25,8 +25,19 @@ def buzzTimesInterval( amount, interval ):
         time.sleep(interval)
 
 # Run buzzer until button is pressed and released
-currentState = GPIO.input(12)
-while currentState or GPIO.input(12) == 0:
+#currentState = GPIO.input(12)
+while GPIO.input() : #currentState or GPIO.input(12) == 0:
     buzzTimesInterval(1, 0.2)
-    currentState = GPIO.input(12)
+#    currentState = GPIO.input(12)
 
+time.sleep(2)
+
+# Vibrate buzzer proportional to volume until button press
+volume = 0
+while GPIO.input() :
+        buzzTimesInterval(1, 1/(float(volume)))
+        #update volume
+
+# internet test
+# camera test
+# video test
