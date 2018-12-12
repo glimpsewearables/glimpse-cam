@@ -14,6 +14,7 @@ import RPi.GPIO as GPIO
 import subprocess as sub
 from logger import log
 
+GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(5, GPIO.OUT)
 

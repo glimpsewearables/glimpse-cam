@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import tinys3, socket, pyinotify, os, time, threading, subprocess, json, requests, datetime
-import imageEnhance as iE
+import tinys3, socket, os, time, subprocess, json, requests, datetime
 from getLines import retKey
 from logger import log
+from inotify_simple import INotify, flags
 
 # Sets up log
 logger = log("errorLog", False).getLogger()
@@ -16,63 +16,53 @@ secret = l[1]
 # API endpoint to send data
 API_ENDPOINT = "http://52.88.225.198:8000/api/media/"
 
-# Setting up dictionary for json data
-data = {}
-data["device_id"] = socket.gethostname()[4:]
-data["downloaded"] = 0
-data["event_id"] = 1
-data["ranking"] = 1
-data["raw_or_edited"] = "raw"
-data["user_id"] = socket.gethostname()[4:]
-
 # Starts aws s3 conncetion
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content')
 
 # Set-up for watching directories
-watchman = pyinotify.WatchManager()
+watchman = INotify()
 
 # Mask for events that occur in the directories
-mask = pyinotify.IN_CLOSE_WRITE
+mask = flags.CLOSE_WRITE
 
-# Exception for if there is no Wifi
-class NoWiFiException(Exception):
-	pass
+# Function to upload file
+def upload(path, filename):
+	data = {}
+	data["ranking"] = 1
+	data["event_id"] = 1
+	data["user_id"] = socket.gethostname()[4:]
+	data["raw_or_edited"] = "raw"
+	data["device_id"] = socket.gethostname()[4:]
+	data["downloaded"] = 0
+	data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
+	data["created_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
+	data["updated_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
+	data["media_type"] = "video"
+	json_data = json.dumps(data)
 
-# Main class that processes files and uploads them
-class EventHandler(pyinotify.ProcessEvent):
-	# Uploads a file that is moved into one of the directories after renaming/processing
-	def process_IN_CLOSE_WRITE(self, event):
-		def __upload():
-			# Gets file type
-            		type = event.pathname[-4:]
-			if type==".jpg" or type==".mp4":
-				filename = os.path.basename(event.pathname)
-				with open(event.pathname, 'rb') as f:
-					# Tries uploading. If there is no wifi, backlog the file to upload later
-					try:
-						if subprocess.check_output(['hostname','-I']).isspace():
-							logger.error("No wifi found.")
-							raise NoWiFiException()
-						conn.upload(filename, f)
-						print 'success'
-						logger.info(filename + " uploaded successfully.")
-						data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
-						data["created_at"] = str(datetime.datetime.now().isoformat('T'))
-						data["updated_at"] = str(datetime.datetime.now().isoformat('T'))
-						data["media_type"] = "image" if (type == '.jpg') else "video"
-						json_data = json.dumps(data)
-						requests.post(url=API_ENDPOINT,data=json_data)
-						logger.info("metadata for " + filename + " uploaded successfully.")
-					except:
-						with open('/home/pi/FilesToUpload.txt','a') as file:
-							file.write(event.pathname+'\n')
-						print 'failure'
-						logger.warning(filename + " failed to upload.")
-		threading.Thread(target=__upload, args=[]).start()
+	with open(path+filename, 'rb') as f:
+		conn.upload(filename, f)
+		print(filename + " successfully uploaded!")
+		logger.info(filename + " uploaded successfully.")
 
-handler = EventHandler()
-notifier = pyinotify.Notifier(watchman, handler)
-wdd = watchman.add_watch('pikrellcam/media/videos', mask, rec=True)
-wss = watchman.add_watch('pikrellcam/media/stills', mask, rec=True)
+	requests.post(url=API_ENDPOINT,data=json_data)
+	logger.info("metadata for " + filename + " uploaded successfully.")
 
-notifier.loop()
+path = '/home/pi/pikrellcam/media/videos/'
+wd = watchman.add_watch(path, mask)
+
+while True:
+	# Writes video name to file for uploading
+	for event in  watchman.read(timeout=10):
+		filetype = event[3][-4:]
+		if filetype == '.mp4':
+			with open('/home/pi/FilesToUpload.txt','a') as backlog:
+				backlog.write(event[3]+'\n')
+	# Gets every file needed to be upload
+	with open('/home/pi/FilesToUpload.txt','r') as fin:
+		data = fin.read().splitlines(True)
+	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload file if successful
+	if not subprocess.check_output(['hostname','-I']).isspace() and data:
+		upload(path,data[0].rstrip())
+		with open('/home/pi/FilesToUpload.txt','w') as fout:
+			fout.writelines(data[1:])

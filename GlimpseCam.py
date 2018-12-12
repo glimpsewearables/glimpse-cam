@@ -17,10 +17,10 @@ filename = ""
 backlogUploadTime = time.time()
 
 # Start pikrellcam and directory watcher
-sub.call('python /home/pi/glimpse-cam/uploadFile.py &',shell=True)
-sub.call('/home/pi/pikrellcam/pikrellcam &',shell=True)
+# Scripts started in .bashrc
+sub.call('/home/pi/pikrellcam/pikrellcam &', shell=True)
 logger.info("Camera initialized.")
-time.sleep(3)
+time.sleep(8)
 
 #BOOT TEST GOES HERE
 
@@ -68,42 +68,16 @@ while True:
 	currentState = not GPIO.input(12)
 	if (currentState and not prevState):
 		logger.info("Button pressed once.")
-		picture = True
 		time.sleep(0.01)
-		endtime = time.time() + 1
-		while time.time() < endtime:
-			prevState = currentState
-			currentState = not GPIO.input(12)
-			if (currentState and not prevState):
-				logger.info("Button pressed twice.")
-				picture = False
-				time.sleep(0.01)
-				break
-			prevState = currentState
-			time.sleep(0.01)
-		if picture:
-			sub.call('echo "still" > /home/pi/pikrellcam/www/FIFO', shell=True)
-			logger.info("Image taken.")
-			GPIO.output(5, GPIO.HIGH)
-			time.sleep(0.5)
-			GPIO.output(5, GPIO.LOW)
-			time.sleep(1)
-		else:
-			sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
-			logger.info("Video taken.")
-			GPIO.output(5, GPIO.HIGH)
-			time.sleep(0.25)
-			GPIO.output(5, GPIO.LOW)
-			time.sleep(0.25)
-			GPIO.output(5, GPIO.HIGH)
-			time.sleep(0.25)
-			GPIO.output(5, GPIO.LOW)
-			time.sleep(5)
-	# Uploads backlog every 10 minutes
-	if time.time() >= backlogUploadTime + 600:
-		logger.info("Attempting to upload backlog.")
-		backlogUploadTime = time.time()
-		print 'Uploading backlog'
-		sub.call('python ./glimpse-cam/uploadBacklog.py &', shell=True)
+		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
+		logger.info("Video taken.")
+		GPIO.output(5, GPIO.HIGH)
+		time.sleep(0.25)
+		GPIO.output(5, GPIO.LOW)
+		time.sleep(0.25)
+		GPIO.output(5, GPIO.HIGH)
+		time.sleep(0.25)
+		GPIO.output(5, GPIO.LOW)
+		time.sleep(10)
 	time.sleep(0.01)
 	prevState = currentState

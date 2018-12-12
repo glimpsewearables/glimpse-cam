@@ -69,10 +69,10 @@ fi
 
 # Install file upload dependencies
 cd /home/pi
-pip install tinys3
+pip install tinys3 enum34
 sudo apt-get install python-setuptools
-sudo easy_install pyinotify
-echo '#./glimpse-cam/GlimpseCam.py' >> .bashrc
+pip3 install inotify_simple
+echo '#./glimpse-cam/GlimpseCam.py & ./glimpse-cam/uploadFile.py &' >> .bashrc
 >newFiles.txt
 
 echo "Congradulations! The Setup is now complete!"
