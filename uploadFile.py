@@ -34,7 +34,7 @@ def upload(path, filename):
 	data["raw_or_edited"] = "raw"
 	data["device_id"] = socket.gethostname()[4:]
 	data["downloaded"] = 0
-	data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename + "/"
+	data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename
 	data["created_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
 	data["updated_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
 	data["media_type"] = "video"
