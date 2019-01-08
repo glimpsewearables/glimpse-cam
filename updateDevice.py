@@ -5,4 +5,4 @@ with open('config.json') as f:
 
 #updating wifi
 for wifi in data["user1"]["wifi"]:
-	print(wifi["name"] + ", " + wifi["password"])
+	print("network={\n\tssid=\"" + wifi["ssid"] + "\"\n\tpsk=\"" + wifi["psk"] + "\"\n}")
