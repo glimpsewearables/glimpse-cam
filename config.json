@@ -1,0 +1,34 @@
+{
+	"user1": {
+		"wifi": [
+			{"name": "glimpse1", "password": "glimpse1"},
+			{"name": "university of washington", "password": "1234"}
+		]
+	},
+	"user2": {
+		"wifi": [
+			{"name": "glimpse1", "password": "glimpse1"},
+			{"name": "university of washington", "password": "1234"}
+		]
+	},
+	"user3": {
+		"wifi": [
+			{"name": "university of washington", "password": "1234"}
+		]
+	},
+	"user4": {
+		"wifi": [
+			{"name": "university of washington", "password": "1234"}
+		]
+	},
+	"user5": {
+		"wifi": [
+			{"name": "glimpse1", "password": "glimpse1"}
+		]
+	},
+	"user6": {
+		"wifi": [
+			{"name": "glimpse1", "password": "glimpse1"}
+		]
+	}
+}
