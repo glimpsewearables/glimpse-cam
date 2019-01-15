@@ -61,11 +61,12 @@ while True:
 		if filetype == '.mp4':
 			with open('/home/pi/FilesToUpload.txt','a') as backlog:
 				backlog.write(event[3]+'\n')
-	# Gets every file needed to be upload
-	with open('/home/pi/FilesToUpload.txt','r') as fin:
-		data = fin.read().splitlines(True)
 	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload file if successful
-	if not subprocess.check_output(['hostname','-I']).isspace() and data:
-		upload(path,data[0].rstrip())
-		with open('/home/pi/FilesToUpload.txt','w') as fout:
-			fout.writelines(data[1:])
+	if not subprocess.check_output(['hostname','-I']).isspace():
+		# Gets every file needed to be upload
+		with open('/home/pi/FilesToUpload.txt','r') as fin:
+			data = fin.read().splitlines(True)
+		if data:
+			upload(path,data[0].rstrip())
+			with open('/home/pi/FilesToUpload.txt','w') as fout:
+				fout.writelines(data[1:])
