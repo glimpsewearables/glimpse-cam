@@ -1,0 +1,34 @@
+{
+	"user1": {
+		"wifi": [
+			{"ssid": "glimpse1", "psk": "glimpse1"},
+			{"ssid": "university of washington", "psk": "1234"}
+		]
+	},
+	"user2": {
+		"wifi": [
+			{"ssid": "glimpse1", "psk": "glimpse1"},
+			{"ssid": "university of washington", "psk": "1234"}
+		]
+	},
+	"user3": {
+		"wifi": [
+			{"ssid": "university of washington", "psk": "1234"}
+		]
+	},
+	"user4": {
+		"wifi": [
+			{"ssid": "university of washington", "psk": "1234"}
+		]
+	},
+	"user5": {
+		"wifi": [
+			{"ssid": "glimpse1", "psk": "glimpse1"}
+		]
+	},
+	"user6": {
+		"wifi": [
+			{"ssid": "glimpse1", "psk": "glimpse1"}
+		]
+	}
+}
