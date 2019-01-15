@@ -45,8 +45,11 @@ def upload(path, filename):
 		print(filename + " successfully uploaded!")
 		logger.info(filename + " uploaded successfully.")
 
-	requests.post(url=API_ENDPOINT,data=json_data)
-	logger.info("metadata for " + filename + " uploaded successfully.")
+	try:
+		requests.post(url=API_ENDPOINT,data=json_data)
+		logger.info("metadata for " + filename + " uploaded successfully.")
+	except:
+		logger.info("metadata for " + filename + " failed to upload.")
 
 path = '/home/pi/pikrellcam/media/videos/'
 wd = watchman.add_watch(path, mask)
