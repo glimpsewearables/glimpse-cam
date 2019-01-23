@@ -3,8 +3,6 @@ RED='\033[0;31m'
 NC='\033[0m'
 echo "***********************************"
 echo "* MEMS Microphone Setup Script    *"
-echo "* Developed by Tianhao Zhang      *"
-echo "* Copyright (C) 2018              *"
 echo "***********************************"
 echo ""
 echo "NOTE:"
@@ -61,6 +59,7 @@ elif [ -e boot3.zth ]; then
 	echo "Continue Installation Process..."
 	rm boot3.zth
 	sudo mv ./glimpse-cam/sh/asoundrc ./.asoundrc
+	timeout 3 arecord -D plughw:1 -c1 -r 48000 -f S32_LE -t wav -V mono -v file.wav
 	timeout 3 arecord -D dmic_sv -c2 -r 44100 -f S32_LE -t wav -V mono -v file.wav
 	cd /home/pi
 	touch complete.zth
