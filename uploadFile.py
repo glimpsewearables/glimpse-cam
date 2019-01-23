@@ -14,7 +14,7 @@ access = l[0]
 secret = l[1]
 
 # API endpoint to send data
-API_ENDPOINT = "http://52.88.225.198:8000/api/media/"
+API_ENDPOINT = "https://api.glimpsewearables.com/api/media/"
 
 # Starts aws s3 conncetion
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content')
@@ -29,7 +29,7 @@ mask = flags.CLOSE_WRITE
 def upload(path, filename):
 	data = {}
 	data["ranking"] = 1
-	data["event_id"] = 1
+	data["event_id"] = 4
 	data["user_id"] = socket.gethostname()[4:]
 	data["raw_or_edited"] = "raw"
 	data["device_id"] = socket.gethostname()[4:]
