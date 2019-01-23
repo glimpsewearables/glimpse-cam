@@ -1,9 +1,6 @@
 #!/bin/bash
 echo "******************************"
 echo "* GlimpseCam Setup Script    *"
-echo "* Developed by Tianhao Zhang *"
-echo "* Modified by Justin Ngo     *"
-echo "* Copyright (C) 2018         *"
 echo "******************************"
 echo ""
 
@@ -72,6 +69,7 @@ cd /home/pi
 pip install tinys3 enum34
 sudo apt-get install python-setuptools
 pip3 install inotify_simple
+pip install inotify_simple
 echo 'sleep 10' >> .bashrc
 echo 'echo $(hostname -I)' >> .bashrc
 echo '#./glimpse-cam/GlimpseCam.py & ./glimpse-cam/uploadFile.py &' >> .bashrc
