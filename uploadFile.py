@@ -40,16 +40,20 @@ def upload(path, filename):
 	data["media_type"] = "video"
 	json_data = json.dumps(data)
 
-	with open(path+filename, 'rb') as f:
-		conn.upload(filename, f)
-		print(filename + " successfully uploaded!")
-		logger.info(filename + " uploaded successfully.")
-
 	try:
-		requests.post(url=API_ENDPOINT,data=json_data)
-		logger.info("metadata for " + filename + " uploaded successfully.")
+		with open(path+filename, 'rb') as f:
+			conn.upload(filename, f)
+			print(filename + " successfully uploaded!")
+			logger.info(filename + " uploaded successfully.")
+			
+		try:
+			requests.post(url=API_ENDPOINT,data=json_data)
+			logger.info("metadata for " + filename + " uploaded successfully.")
+		except:
+			logger.info("metadata for " + filename + " failed to upload.")
 	except:
-		logger.info("metadata for " + filename + " failed to upload.")
+		print(filename + " failed to upload.")
+		logger.info(filename + " failed to upload.")
 
 path = '/home/pi/pikrellcam/media/videos/'
 wd = watchman.add_watch(path, mask)
