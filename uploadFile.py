@@ -54,6 +54,7 @@ def upload(path, filename):
 	except:
 		print(filename + " failed to upload.")
 		logger.info(filename + " failed to upload.")
+		raise ValueError("Upload failed.")
 
 path = '/home/pi/pikrellcam/media/videos/'
 wd = watchman.add_watch(path, mask)
@@ -71,6 +72,9 @@ while True:
 		with open('/home/pi/FilesToUpload.txt','r') as fin:
 			data = fin.read().splitlines(True)
 		if data:
-			upload(path,data[0].rstrip())
-			with open('/home/pi/FilesToUpload.txt','w') as fout:
-				fout.writelines(data[1:])
+			try:
+				upload(path,data[0].rstrip())
+				with open('/home/pi/FilesToUpload.txt','w') as fout:
+					fout.writelines(data[1:])
+			except:
+				pass
