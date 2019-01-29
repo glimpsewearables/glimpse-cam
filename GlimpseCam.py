@@ -55,13 +55,16 @@ time.sleep(8)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(5, GPIO.OUT)
-GPIO.output(5, GPIO.HIGH)
-time.sleep(0.5)
-GPIO.output(5, GPIO.LOW)
-time.sleep(0.5)
-GPIO.output(5, GPIO.HIGH)
-time.sleep(0.5)
-GPIO.output(5, GPIO.LOW)
+
+buzzMotor(0.5)
+# Replaced with buzzMotor function. If it doesnt work, revert back to below code - Stefan
+# GPIO.output(5, GPIO.HIGH)
+# time.sleep(0.5)
+# GPIO.output(5, GPIO.LOW)
+# time.sleep(0.5)
+# GPIO.output(5, GPIO.HIGH)
+# time.sleep(0.5)
+# GPIO.output(5, GPIO.LOW)
 
 # Main loop
 while True:
@@ -71,13 +74,25 @@ while True:
 		time.sleep(0.01)
 		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
 		logger.info("Video taken.")
-		GPIO.output(5, GPIO.HIGH)
-		time.sleep(0.25)
-		GPIO.output(5, GPIO.LOW)
-		time.sleep(0.25)
-		GPIO.output(5, GPIO.HIGH)
-		time.sleep(0.25)
-		GPIO.output(5, GPIO.LOW)
+		
+		buzzMotor(0.25)
+		# Replaced with buzzMotor function. If it doesnt work, revert back to below code - Stefan
+		# GPIO.output(5, GPIO.HIGH)
+		# time.sleep(0.25)
+		# GPIO.output(5, GPIO.LOW)
+		# time.sleep(0.25)
+		# GPIO.output(5, GPIO.HIGH)
+		# time.sleep(0.25)
+		# GPIO.output(5, GPIO.LOW)
 		time.sleep(10)
 	time.sleep(0.01)
 	prevState = currentState
+
+def buzzMotor(self, interval = 0.25):
+	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
