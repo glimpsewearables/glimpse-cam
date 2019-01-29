@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import tinys3, socket, pyinotify, os, time, threading, subprocess
-import imageEnhance as iE
+import tinys3, socket, os, time, subprocess, json, requests, datetime
 from getLines import retKey
 from logger import log
+from inotify_simple import INotify, flags
 
 # Sets up log
 logger = log("errorLog", False).getLogger()
@@ -13,73 +13,59 @@ l = retKey()
 access = l[0]
 secret = l[1]
 
-# Numbering for images/videos
-with open("./glimpse-cam/numFile.txt") as numFile:
-	int_list = [int(i) for i in numFile.readline().split()]
+# API endpoint to send data
+API_ENDPOINT = "http://52.88.225.198:8000/api/media/"
 
 # Starts aws s3 conncetion
-conn = tinys3.Connection(access, secret, tls=True, default_bucket='pi-5')
+conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content')
 
 # Set-up for watching directories
-watchman = pyinotify.WatchManager()
+watchman = INotify()
 
 # Mask for events that occur in the directories
-mask = pyinotify.IN_MOVED_TO | pyinotify.IN_CREATE
+mask = flags.CLOSE_WRITE
 
-# Exception for if there is no Wifi
-class NoWiFiException(Exception):
-	pass
+# Function to upload file
+def upload(path, filename):
+	data = {}
+	data["ranking"] = 1
+	data["event_id"] = 1
+	data["user_id"] = socket.gethostname()[4:]
+	data["raw_or_edited"] = "raw"
+	data["device_id"] = socket.gethostname()[4:]
+	data["downloaded"] = 0
+	data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename
+	data["created_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
+	data["updated_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
+	data["media_type"] = "video"
+	json_data = json.dumps(data)
 
-# Main class that processes files and uploads them
-class EventHandler(pyinotify.ProcessEvent):
-	# Uploads a file that is moved into one of the directories after renaming/processing
-	def process_IN_MOVED_TO(self, event):
-		def __upload():
-			# Gets file type
-			type = event.pathname[-4:]
-			filename = os.path.basename(event.pathname)
-			with open(event.pathname, 'rb') as f:
-				# Tries uploading. If there is no wifi, backlog the file to upload later
-				try:
-					if subprocess.check_output(['hostname','-I']).isspace():
-						logger.error("No wifi found.")
-						raise NoWiFiException()
-					conn.upload(socket.gethostname() + '/' + ('images' if (type == '.jpg') else 'videos') + '/' + filename, f)
-					print 'success'
-					logger.info(filename + " uploaded successfully.")
-				except:
-					with open('/home/pi/newFiles.txt','a') as file:
-						file.write(event.pathname+'\n')
-					print 'failure'
-					logger.warning(filename + " failed to upload.")
-		threading.Thread(target=__upload, args=[]).start()
+	with open(path+filename, 'rb') as f:
+		conn.upload(filename, f)
+		print(filename + " successfully uploaded!")
+		logger.info(filename + " uploaded successfully.")
 
-	# When a file is created in one of the directories, rename/process the file
-	def process_IN_CREATE(self, event):
-		type = event.pathname[-4:]
-		path = os.path.dirname(event.pathname)
-		if type == '.jpg':
-			time.sleep(1)
-			iE.simpleImageEnhance(event.pathname, event.pathname)
-			filename = os.path.basename(event.pathname)
-			time.sleep(1)
-			os.rename(event.pathname, path + '/%05d' % int_list[0] + filename)
-			int_list[0] -= 1
-		elif type == '.mp4':
-			#print 'video was created: ', event.pathname
-			time.sleep(10)
-			filename = os.path.basename(event.pathname)
-			time.sleep(1)
-			os.rename(event.pathname, path + '/%05d' % int_list[1] + filename)
-			int_list[1] -= 1
-		time.sleep(0.01)
-		# Update file numbering
-		with open('./glimpse-cam/numFile.txt','w') as numFile:
-			numFile.write(str(int_list[0]) + ' ' + str(int_list[1]))
+	try:
+		requests.post(url=API_ENDPOINT,data=json_data)
+		logger.info("metadata for " + filename + " uploaded successfully.")
+	except:
+		logger.info("metadata for " + filename + " failed to upload.")
 
-handler = EventHandler()
-notifier = pyinotify.Notifier(watchman, handler)
-wdd = watchman.add_watch('pikrellcam/media/videos', mask, rec=True)
-wss = watchman.add_watch('pikrellcam/media/stills', mask, rec=True)
+path = '/home/pi/pikrellcam/media/videos/'
+wd = watchman.add_watch(path, mask)
 
-notifier.loop()
+while True:
+	# Writes video name to file for uploading
+	for event in  watchman.read(timeout=10):
+		filetype = event[3][-4:]
+		if filetype == '.mp4':
+			with open('/home/pi/FilesToUpload.txt','a') as backlog:
+				backlog.write(event[3]+'\n')
+	# Gets every file needed to be upload
+	with open('/home/pi/FilesToUpload.txt','r') as fin:
+		data = fin.read().splitlines(True)
+	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload file if successful
+	if not subprocess.check_output(['hostname','-I']).isspace() and data:
+		upload(path,data[0].rstrip())
+		with open('/home/pi/FilesToUpload.txt','w') as fout:
+			fout.writelines(data[1:])
