@@ -51,7 +51,7 @@ def upload(path, filename):
 			logger.info("metadata for " + filename + " uploaded successfully.")
 		except:
 			logger.info("metadata for " + filename + " failed to upload.")
-	except:
+	except requests.ConnectionError:
 		print(filename + " failed to upload.")
 		logger.info(filename + " failed to upload.")
 		raise ValueError("Upload failed.")
