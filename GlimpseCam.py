@@ -5,6 +5,9 @@ import RPi.GPIO as GPIO
 import subprocess as sub
 from logger import log
 
+BUZZER_PIN = 5
+BUZZER_HIGH = 12
+
 # Sets up log
 logger = log("errorLog", False).getLogger()
 logger.info("Device started.")
