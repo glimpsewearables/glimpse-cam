@@ -54,6 +54,15 @@ time.sleep(8)
 
 #BACK TO RUNNING
 
+def buzzMotor(self, interval = 0.25):
+	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+	time.sleep(interval)
+	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
+
 # After booting, motor buzzes twice
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -90,12 +99,3 @@ while True:
 		time.sleep(10)
 	time.sleep(0.01)
 	prevState = currentState
-
-def buzzMotor(self, interval = 0.25):
-	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
-	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
-	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
-	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
