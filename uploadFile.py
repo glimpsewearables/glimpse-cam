@@ -17,7 +17,7 @@ secret = l[1]
 API_ENDPOINT = "https://api.glimpsewearables.com/api/media/"
 
 # Starts aws s3 conncetion
-conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3.us-west-2.amazonaws.com")
+conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
 
 # Set-up for watching directories
 watchman = INotify()
