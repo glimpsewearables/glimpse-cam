@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import time, datetime, os, glob, socket
+import time, datetime, os, glob, socket, signal
 import RPi.GPIO as GPIO
 import subprocess as sub
 from logger import log
@@ -63,20 +63,25 @@ def buzzMotor(self, interval = 0.25):
 	time.sleep(interval)
 	GPIO.output(BUZZER_PIN, GPIO.LOW)
 
+def handler(signum, frame):
+	print("pikrellcam stopped running")
+	logger.info("pikrellcam stopped running")
+	raise Exception("pikrellcam failed")
+
+def takeVideo():
+	while 1:
+		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
+		time.sleep(1)
+
+signal.signal(signal.SIGALRM, handler)
+signal.alarm(1)
+	
 # After booting, motor buzzes twice
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(5, GPIO.OUT)
 
 buzzMotor(0.5)
-# Replaced with buzzMotor function. If it doesnt work, revert back to below code - Stefan
-# GPIO.output(5, GPIO.HIGH)
-# time.sleep(0.5)
-# GPIO.output(5, GPIO.LOW)
-# time.sleep(0.5)
-# GPIO.output(5, GPIO.HIGH)
-# time.sleep(0.5)
-# GPIO.output(5, GPIO.LOW)
 
 # Main loop
 while True:
@@ -84,18 +89,14 @@ while True:
 	if (currentState and not prevState):
 		logger.info("Button pressed once.")
 		time.sleep(0.01)
-		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
-		logger.info("Video taken.")
-		
-		buzzMotor(0.25)
-		# Replaced with buzzMotor function. If it doesnt work, revert back to below code - Stefan
-		# GPIO.output(5, GPIO.HIGH)
-		# time.sleep(0.25)
-		# GPIO.output(5, GPIO.LOW)
-		# time.sleep(0.25)
-		# GPIO.output(5, GPIO.HIGH)
-		# time.sleep(0.25)
-		# GPIO.output(5, GPIO.LOW)
-		time.sleep(10)
+		try:
+			takeVideo()
+			#sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
+			logger.info("Video taken.")
+			buzzMotor(0.25)
+			time.sleep(10)
+		except Exception, exc:
+			sub.call('/home/pi/pikrellcam/pikrellcam &', shell=True)
+			logger.info("Camera initialized.")
 	time.sleep(0.01)
 	prevState = currentState
