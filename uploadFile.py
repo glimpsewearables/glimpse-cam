@@ -28,7 +28,7 @@ mask = flags.CLOSE_WRITE
 # Function to upload file
 def upload(path, filename):
 	now = datetime.datetime.now().time()
-    today = datetime.date.today()
+    	today = datetime.date.today()
 	data = {}
 	data["ranking"] = 1
 	data["event_id"] = 4
