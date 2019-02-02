@@ -27,6 +27,8 @@ mask = flags.CLOSE_WRITE
 
 # Function to upload file
 def upload(path, filename):
+	now = datetime.datetime.now().time()
+    today = datetime.date.today()
 	data = {}
 	data["ranking"] = 1
 	data["event_id"] = 4
@@ -38,6 +40,16 @@ def upload(path, filename):
 	data["created_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
 	data["updated_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
 	data["media_type"] = "video"
+	data["downloaded"] = 0
+	data["date"] = str(today)
+	data["date_time"] = str(now)
+	data["gif_link"] = ""
+	# data["media_length"] = 0.0
+	# data["media_size"] = 0.0
+	# data["user_rating"] = 0
+	# data["curator_rating"] = 0
+	# data["bitrate"] = 0
+	# data["total_bitrate"] = 0
 	json_data = json.dumps(data)
 
 	try:
