@@ -63,18 +63,17 @@ def buzzMotor(self, interval = 0.25):
 	time.sleep(interval)
 	GPIO.output(BUZZER_PIN, GPIO.LOW)
 
-def handler(signum, frame):
-	print("pikrellcam stopped running")
-	logger.info("pikrellcam stopped running")
-	raise Exception("pikrellcam failed")
-
-def takeVideo():
-	while 1:
-		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
+def checkCamera():
+	ps = sub.Popen(('ps','-A'),stdout=sub.PIPE)
+	try:
+		output = sub.check_output(('grep','pikrellcam'),stdin=ps.stdout)
+		ps.wait()
+		#pikrellcam is still running
+	except:
+		logger.info("pikrellcam is no longer running")
+		sub.call('/home/pi/pikrellcam/pikrellcam &', shell=True)
 		time.sleep(1)
-
-signal.signal(signal.SIGALRM, handler)
-signal.alarm(1)
+		logger.info("relaunched pikrellcam")
 	
 # After booting, motor buzzes twice
 GPIO.setmode(GPIO.BCM)
@@ -86,17 +85,13 @@ buzzMotor(0.5)
 # Main loop
 while True:
 	currentState = not GPIO.input(12)
+	checkCamera()
 	if (currentState and not prevState):
 		logger.info("Button pressed once.")
 		time.sleep(0.01)
-		try:
-			takeVideo()
-			#sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
-			logger.info("Video taken.")
-			buzzMotor(0.25)
-			time.sleep(10)
-		except Exception, exc:
-			sub.call('/home/pi/pikrellcam/pikrellcam &', shell=True)
-			logger.info("Camera initialized.")
+		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
+		logger.info("Video taken.")
+		buzzMotor(0.25)
+		time.sleep(10)
 	time.sleep(0.01)
 	prevState = currentState
