@@ -4,14 +4,14 @@ import time, datetime, os, glob, socket
 import RPi.GPIO as GPIO
 import subprocess as sub
 
-def buzzMotor(self, interval = 0.25):
-	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+def buzzMotor(interval = 0.25):
+	GPIO.output(BUZZER_PIN, GPIO.HIGH)
 	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
+	GPIO.output(BUZZER_PIN, GPIO.LOW)
 	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.HIGH)
+	GPIO.output(BUZZER_PIN, GPIO.HIGH)
 	time.sleep(interval)
-	self.GPIO.output(BUZZER_PIN, self.GPIO.LOW)
+	GPIO.output(BUZZER_PIN, GPIO.LOW)
 
 BUZZER_PIN = 5
 BUZZER_HIGH = 12
@@ -26,13 +26,13 @@ GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(5, GPIO.OUT)
 
 
-response = str(input("Buzzer Test. Press any key to continue..."))
+response = int(input("Buzzer Test. Press any key to continue..."))
 buzzMotor()
-response = str(input("Did buzzer vibrate? If not, buzzer is not attached correctly."))
+response = int(input("Did buzzer vibrate? If not, buzzer is not attached correctly."))
 
 print("Testing Microphone")
 os.system("arecord -l")
-response = str(input("Do you see the microphone? If not, microphone is not connected correctly."))
+response = int(input("Do you see the microphone? If not, microphone is not connected correctly."))
 
 print("Testing Camera")
 sub.call('/home/pi/pikrellcam/pikrellcam &', shell=True)
@@ -52,4 +52,4 @@ except:
 	print ('video file was not uploaded correctly')
 #Up to here.
 
-response = str(input("End of Test Script. Press any key to exit"))
+response = int(input("End of Test Script. Press any key to exit"))
