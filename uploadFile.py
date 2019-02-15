@@ -31,35 +31,35 @@ def getEventId():
 	event_id = 1
 	if today == "2019-02-07":
 		event_id = 5
-	elif today == "2019-02-09"
+	elif today == "2019-02-09":
 		event_id = 6
-	elif today == "2019-02-16"
+	elif today == "2019-02-16":
 		event_id = 7
-	elif today == "2019-02-17"
+	elif today == "2019-02-17":
 		event_id = 8
-	elif today == "2019-02-23"
+	elif today == "2019-02-23":
 		event_id = 9
-	elif today == "2019-02-29"
+	elif today == "2019-02-29":
 		event_id = 10
-	elif today == "2019-03-07"
+	elif today == "2019-03-07":
 		event_id = 11
-	elif today == "2019-03-08"
+	elif today == "2019-03-08":
 		event_id = 12
-	elif today == "2019-03-22"
+	elif today == "2019-03-22":
 		event_id = 13
-	elif today == "2019-03-23"
+	elif today == "2019-03-23":
 		event_id = 14
-	elif today == "2019-03-29"
+	elif today == "2019-03-29":
 		event_id = 15
-	elif today == "2019-04-05"
+	elif today == "2019-04-05":
 		event_id = 16
-	elif today == "2019-04-06"
+	elif today == "2019-04-06":
 		event_id = 17
-	elif today == "2019-04-13"
+	elif today == "2019-04-13":
 		event_id = 18
-	elif today == "2019-04-25"
+	elif today == "2019-04-25":
 		event_id = 19
-	elif today == "2019-04-27"
+	elif today == "2019-04-27":
 		event_id = 20
 	return event_id
 
