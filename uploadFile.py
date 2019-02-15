@@ -3,7 +3,6 @@
 import tinys3, socket, os, time, subprocess, json, requests, datetime
 from getLines import retKey
 from logger import log
-from inotify_simple import INotify, flags
 
 # Sets up log
 logger = log("errorLog", False).getLogger()
@@ -18,12 +17,6 @@ API_ENDPOINT = "https://api.glimpsewearables.com/api/media/"
 
 # Starts aws s3 conncetion
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
-
-# Set-up for watching directories
-watchman = INotify()
-
-# Mask for events that occur in the directories
-mask = flags.CLOSE_WRITE
 
 def getEventId():
 	now = datetime.datetime.now().time()
@@ -91,40 +84,43 @@ def upload(path, filename):
 	json_data = json.dumps(data)
 
 	try:
+		# Tries to upload video
 		with open(path+filename, 'rb') as f:
 			conn.upload(filename, f)
 			print(filename + " successfully uploaded!")
 			logger.info(filename + " uploaded successfully.")
-			
+
+		# Tries to update API
 		try:
 			requests.post(url=API_ENDPOINT,data=json_data)
 			logger.info("metadata for " + filename + " uploaded successfully.")
 		except:
 			logger.info("metadata for " + filename + " failed to upload.")
+
+	# Logs upload failure
 	except requests.ConnectionError:
 		print(filename + " failed to upload.")
 		logger.info(filename + " failed to upload.")
 		raise ValueError("Upload failed.")
 
 path = '/home/pi/pikrellcam/media/videos/'
-wd = watchman.add_watch(path, mask)
+list = sorted(glob.glob(path + '*.mp4'),key=os.path.getmtime)
+dest = '/home/pi/Videos/'
 
 while True:
-	# Writes video name to file for uploading
-	for event in  watchman.read(timeout=10):
-		filetype = event[3][-4:]
-		if filetype == '.mp4':
-			with open('/home/pi/FilesToUpload.txt','a') as backlog:
-				backlog.write(event[3]+'\n')
-	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload file if successful
+	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload folder if successful
 	if not subprocess.check_output(['hostname','-I']).isspace():
-		# Gets every file needed to be upload
-		with open('/home/pi/FilesToUpload.txt','r') as fin:
-			data = fin.read().splitlines(True)
-		if data:
+		# Uploads if there are videos left. Checks for new videos after uploading current list.
+		if list:
+			item = list[0]
+			video = os.path.basename(item)
+			# Tries uploading video. Moves video and removes it from the list if successful. Otherwise, it stays in the list
 			try:
-				upload(path,data[0].rstrip())
-				with open('/home/pi/FilesToUpload.txt','w') as fout:
-					fout.writelines(data[1:])
+				upload(path, video)
+				os.rename(item, dest + video)
+				list = list[1:]
 			except:
 				pass
+		else:
+			list = sorted(glob.glob(path + '*.mp4'),key=os.path.getmtime)
+		time.sleep(2)
