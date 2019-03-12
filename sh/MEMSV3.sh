@@ -26,6 +26,7 @@ if [ -e boot1.zth ]; then
 	sudo apt-get update
 	sudo apt-get install rpi-update
 	sudo rpi-update
+	sudo apt-get install -y chrpath gawk texinfo libsdl1.2-dev whiptail diffstat cpio libssl-dev flex bison
 	touch boot2.zth
 	echo "Rebooting in 5 Seconds!"
     sleep 5
