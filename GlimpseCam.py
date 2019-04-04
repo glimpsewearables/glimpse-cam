@@ -11,6 +11,7 @@ BUZZER_HIGH = 12
 
 def signal_handler(sig, frame):
     print("Stopped by Keyboard Interrupt")
+    print("Graceful Exit")
     GPIO.cleanup()
     sys.exit(0)
 
@@ -95,6 +96,7 @@ while True:
 	if (currentState and not prevState):
 		logger.info("Button pressed once.")
 		time.sleep(0.01)
+		print("Photo Taken")
 		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
 		logger.info("Video taken.")
 		buzzMotor(0.25)
