@@ -15,6 +15,8 @@ def signal_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+signal.signal(signal.SIGINT, signal_handler)
+
 # Sets up log
 logger = log("errorLog", False).getLogger()
 logger.info("Device started.")
