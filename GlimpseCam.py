@@ -98,7 +98,7 @@ while True:
 	if (currentState and not prevState):
 		logger.info("Button pressed once.")
 		time.sleep(0.01)
-		print("Photo Taken")
+		print("Video Taken")
 		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
 		logger.info("Video taken.")
 		buzzMotor(0.25)
