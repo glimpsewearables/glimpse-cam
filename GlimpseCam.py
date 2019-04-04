@@ -3,10 +3,16 @@
 import time, datetime, os, glob, socket, signal
 import RPi.GPIO as GPIO
 import subprocess as sub
+import sys
 from logger import log
 
 BUZZER_PIN = 5
 BUZZER_HIGH = 12
+
+def signal_handler(sig, frame):
+    print("Stopped by Keyboard Interrupt")
+    GPIO.cleanup()
+    sys.exit(0)
 
 # Sets up log
 logger = log("errorLog", False).getLogger()
