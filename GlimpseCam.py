@@ -102,6 +102,6 @@ while True:
 		sub.call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
 		logger.info("Video taken.")
 		buzzMotor(0.25)
-		time.sleep(10)
+		time.sleep(15)
 	time.sleep(0.01)
 	prevState = currentState
