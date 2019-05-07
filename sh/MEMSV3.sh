@@ -35,7 +35,7 @@ elif [ -e boot2.zth ]; then
 	echo "boot2.zth Exists"
 	echo "Continue Installation Process..."
 	rm boot2.zth
-	sudo apt-get install git bc libncurses5-dev
+	sudo apt-get install git bc libncurses5-dev bison flex libssl-dev
 	sudo wget https://raw.githubusercontent.com/notro/rpi-source/master/rpi-source -O /usr/bin/rpi-source
 	sudo chmod +x /usr/bin/rpi-source
 	/usr/bin/rpi-source -q --tag-update
