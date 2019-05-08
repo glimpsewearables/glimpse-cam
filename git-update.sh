@@ -1,4 +1,6 @@
 #!/bin/bash
+cd /home/pi/glimpse-cam/
+
 set -e
 
 local_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
@@ -20,3 +22,5 @@ else
     echo 'Fast-forward not possible. Rebasing...'
     git rebase --preserve-merges --stat $remote_branch
 fi
+
+cd /home/pi/
