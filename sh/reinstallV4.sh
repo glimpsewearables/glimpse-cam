@@ -47,7 +47,7 @@ cd /home/pi
 pip install tinys3 
 echo 'sleep 10' >> .bashrc
 echo 'echo $(hostname -I)' >> .bashrc
-echo './glimpse-cam/git-update.sh'
+echo './glimpse-cam/git-update.sh' >> .bashrc
 echo '#./glimpse-cam/GlimpseCam.py & ./glimpse-cam/uploadFile.py &' >> .bashrc
 
 
