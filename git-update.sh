@@ -23,6 +23,6 @@ else
     git rebase --preserve-merges --stat $remote_branch
 fi
 
-sudo mv /home/pi/glimpse-cam/sh/pikrellcam.conf /home/pi/.pikrellcam/pikrellcam.conf
+sudo cp /home/pi/glimpse-cam/sh/pikrellcam.conf /home/pi/.pikrellcam/pikrellcam.conf
 
 cd /home/pi/
