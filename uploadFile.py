@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import tinys3, socket, os, time, subprocess, json, requests, datetime, glob
+import tinys3, socket, os, time, subprocess, json, requests, datetime, glob, httplib
 from getLines import retKey
 from logger import log
 
@@ -14,6 +14,16 @@ secret = l[1]
 
 # API endpoint to send data
 API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
+
+# Cloudinary URL 
+CLOUDINARY_URL = "www.res.cloudinary.com"
+
+# Cloudinary prefix
+CLOUDINARY_METHOD = "/glimpse-wearables/video/upload"
+
+# Create global HTTP connection since these are expensive 
+# TODO: maybe clean this up in a later iteration 
+httpConn = httplib.HTTPConnection(CLOUDINARY_URL)
 
 # Starts aws s3 conncetion
 conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
@@ -56,6 +66,29 @@ def getEventId():
 		event_id = 20
 	return event_id
 
+# Hits cloudinary url to trigger file upload from AWS
+def upload_cloudinary(user_id, filename):
+
+	if not user_id:
+		logger.error("Cloudinary upload called with no user_id.")
+		return
+	if not filename:
+		logger.error("Cloudinary upload called with no filename.")
+		return
+	
+	req_url = "{}/{}/{}".format(CLOUDINARY_METHOD, user_id, filename)
+
+	try:
+		# Use HEAD since no data is required
+		httpConn.request("HEAD", req_url)
+		resp = httpConn.getresponse()
+		if resp.status != 200:
+			logger.error("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
+		else:
+			logger.info("Cloudinary upload triggered for {}.".format(req_url))
+	except HTTPException:
+		logger.error("Cloudinary request failed for {}.".format(req_url))
+
 # Function to upload file
 def upload(path, filename):
 	now = datetime.datetime.now().time()
@@ -90,17 +123,19 @@ def upload(path, filename):
 			print(filename + " successfully uploaded!")
 			logger.info(filename + " uploaded successfully.")
 
+		upload_cloudinary(socket.gethostname()[:4], filename)
+
 		# Tries to update API
 		try:
 			requests.post(url=API_ENDPOINT,data=json_data)
 			logger.info("metadata for " + filename + " uploaded successfully.")
 		except:
-			logger.info("metadata for " + filename + " failed to upload.")
+			logger.error("metadata for " + filename + " failed to upload.")
 
 	# Logs upload failure
 	except requests.ConnectionError:
 		print(filename + " failed to upload.")
-		logger.info(filename + " failed to upload.")
+		logger.error(filename + " failed to upload.")
 		raise ValueError("Upload failed.")
 
 path = '/home/pi/pikrellcam/media/videos/'
