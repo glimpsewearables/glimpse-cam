@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import tinys3, socket, os, time, subprocess, json, requests, datetime, glob, httplib
+import tinys3, socket, os, time, subprocess, json, requests, datetime, glob, httplib, traceback
 from getLines import retKey
 from logger import log
 
@@ -67,27 +67,52 @@ def getEventId():
 	return event_id
 
 # Hits cloudinary url to trigger file upload from AWS
+# Returns True if trigger succeeds, False if failed.
 def upload_cloudinary(user_id, filename):
 
 	if not user_id:
 		logger.error("Cloudinary upload called with no user_id.")
-		return
+		return False
 	if not filename:
 		logger.error("Cloudinary upload called with no filename.")
-		return
+		return False
 	
 	req_url = "{}/{}/{}".format(CLOUDINARY_METHOD, user_id, filename)
 
-	try:
-		# Use HEAD since no data is required
-		httpConn.request("HEAD", req_url)
-		resp = httpConn.getresponse()
-		if resp.status != 200:
-			logger.error("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
-		else:
-			logger.info("Cloudinary upload triggered for {}.".format(req_url))
-	except HTTPException:
-		logger.error("Cloudinary request failed for {}.".format(req_url))
+        try:
+            # Use HEAD since no data is required
+            httpConn.request("HEAD", req_url)
+        except Exception as e:
+                traceback.print_exc()
+                logger.error("Cloudinary request failed for {}.".format(req_url))
+                return False
+
+        cloudinary_return = False
+        cloudinary_attempts = 0
+
+        # Retry Cloudinary trigger until success or at most 3 times
+        while not cloudinary_return and cloudinary_attempts < 3:
+            try:
+                resp = httpConn.getresponse()
+                cloudinary_attempts += 1
+                if resp.status != 200:
+                        # Cloudinary failed, return from method
+                        logger.error("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
+                        return False
+                else:
+                        # Read the response to enabled next request
+                        resp.read()
+                        cloudinary_return = True
+                        logger.info("Cloudinary upload triggered for {}.".format(req_url))
+            except httplip.ResponseNotReady as e:
+                logger.info("Cloudinary HTTP response for {} not ready after attempt {}, retrying...".format(req_url, cloudinary_attempts))
+        
+        # The request never returned
+        if not cloudinary_return:
+                logger.error("Cloudinary HTTP request for {} never returned.".format(req_url))
+                return False
+
+        return True
 
 # Function to upload file
 def upload(path, filename):
@@ -154,7 +179,8 @@ while True:
 				upload(path, video)
 				os.rename(item, dest + video)
 				list = list[1:]
-			except:
+			except Exception as e:
+                                logger.error("{} upload / move failed.".format(video))
 				pass
 		else:
 			list = sorted(glob.glob(path + '*.mp4'),key=os.path.getmtime)
