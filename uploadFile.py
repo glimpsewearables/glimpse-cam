@@ -1,81 +1,69 @@
 #!/usr/bin/env python
 
-import tinys3, socket, os, time, subprocess, json, requests, datetime, glob, httplib, traceback
+import tinys3, socket, os, time, subprocess, requests, glob, httplib 
 from getLines import retKey
-from logger import log
+import logging
+import sys
 
-# Sets up log
-logger = log("errorLog", False).getLogger()
+try: 
+    # Sets up log
+    logFormat='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s'
+    logging.basicConfig(
+            filename="uploadLog.log",
+            level=logging.INFO,
+            format=logFormat
+    )
 
-# Getting Access/Secret Keys
-l = retKey()
-access = l[0]
-secret = l[1]
+    logger = logging.getLogger()
 
-# API endpoint to send data
-API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
+    # Add --console-log argument to add console logging
+    if len(sys.argv) > 1 and sys.argv[1] == '--console-log':
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setLevel(logging.DEBUG)
+        stdout_handler.setFormatter(logging.Formatter(logFormat))
+        logger.addHandler(stdout_handler)
 
-# Cloudinary URL 
-CLOUDINARY_URL = "www.res.cloudinary.com"
+    # Getting Access/Secret Keys
+    l = retKey()
+    access = l[0]
+    secret = l[1]
 
-# Cloudinary prefix
-CLOUDINARY_METHOD = "/glimpse-wearables/video/upload"
+    USER_ID = socket.gethostname()[:4]
 
-# Create global HTTP connection since these are expensive 
-# TODO: maybe clean this up in a later iteration 
-httpConn = httplib.HTTPConnection(CLOUDINARY_URL)
+    # API endpoint to send data
+    API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
 
-# Starts aws s3 conncetion
-conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
+    # Cloudinary URL 
+    CLOUDINARY_URL = "www.res.cloudinary.com"
 
-def getEventId():
-	now = datetime.datetime.now().time()
-	today = datetime.date.today()
-	event_id = 1
-	if today == "2019-02-07":
-		event_id = 5
-	elif today == "2019-02-09":
-		event_id = 6
-	elif today == "2019-02-16":
-		event_id = 7
-	elif today == "2019-02-17":
-		event_id = 8
-	elif today == "2019-02-23":
-		event_id = 9
-	elif today == "2019-02-29":
-		event_id = 10
-	elif today == "2019-03-07":
-		event_id = 11
-	elif today == "2019-03-08":
-		event_id = 12
-	elif today == "2019-03-22":
-		event_id = 13
-	elif today == "2019-03-23":
-		event_id = 14
-	elif today == "2019-03-29":
-		event_id = 15
-	elif today == "2019-04-05":
-		event_id = 16
-	elif today == "2019-04-06":
-		event_id = 17
-	elif today == "2019-04-13":
-		event_id = 18
-	elif today == "2019-04-25":
-		event_id = 19
-	elif today == "2019-04-27":
-		event_id = 20
-	return event_id
+    # Cloudinary prefix
+    CLOUDINARY_METHOD = "/glimpse-wearables/video/upload"
+    
+    TO_UPLOAD_PATH = '/home/pi/pikrellcam/media/videos/'
+    list = sorted(glob.glob(TO_UPLOAD_PATH + '*.mp4'),key=os.path.getmtime)
+    UPLOADED_PATH = '/home/pi/Videos/'
+    UPLOAD_COMPLETE_MESSAGE = False
+
+    # Create global HTTP connection since these are expensive 
+    # TODO: maybe clean this up in a later iteration 
+    httpConn = httplib.HTTPConnection(CLOUDINARY_URL)
+
+    # Starts aws s3 conncetion
+    conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
+    logger.info("setup success.")
+except:
+    logger.error("setup failed.")
+    print(sys.exc_info()[0])
+    raise
 
 # Hits cloudinary url to trigger file upload from AWS
-# Returns True if trigger succeeds, False if failed.
+# Throws httplib.CannotSendRequest, httplib.BadStatusLine, httplib.IncompleteRead
 def upload_cloudinary(user_id, filename):
 
 	if not user_id:
-		logger.error("Cloudinary upload called with no user_id.")
-		return False
+		raise httplib.CannotSendRequest("Cloudinary upload called with no user_id.")
 	if not filename:
-		logger.error("Cloudinary upload called with no filename.")
-		return False
+		raise httplib.CannotSendRequest("Cloudinary upload called with no filename.")
 	
 	req_url = "{}/{}/{}".format(CLOUDINARY_METHOD, user_id, filename)
 
@@ -83,9 +71,7 @@ def upload_cloudinary(user_id, filename):
             # Use HEAD since no data is required
             httpConn.request("HEAD", req_url)
         except Exception as e:
-                traceback.print_exc()
-                logger.error("Cloudinary request failed for {}.".format(req_url))
-                return False
+                raise httplib.CannotSendRequest("Cloudinary request failed for {}.".format(req_url))
 
         cloudinary_return = False
         cloudinary_attempts = 0
@@ -97,76 +83,35 @@ def upload_cloudinary(user_id, filename):
                 cloudinary_attempts += 1
                 if resp.status != 200:
                         # Cloudinary failed, return from method
-                        logger.error("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
-                        return False
+                        raise httplib.BadStatusLine("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
                 else:
                         # Read the response to enabled next request
                         resp.read()
                         cloudinary_return = True
-                        logger.info("Cloudinary upload triggered for {}.".format(req_url))
             except httplip.ResponseNotReady as e:
                 logger.info("Cloudinary HTTP response for {} not ready after attempt {}, retrying...".format(req_url, cloudinary_attempts))
         
         # The request never returned
         if not cloudinary_return:
-                logger.error("Cloudinary HTTP request for {} never returned.".format(req_url))
-                return False
+                raise httplib.IncompleteRead("Cloudinary HTTP request for {} never returned.".format(req_url))
 
-        return True
-
+# Return True if success False if failure
 # Function to upload file
-def upload(path, filename):
-	now = datetime.datetime.now().time()
-	today = datetime.date.today()
-	data = {}
-	data["ranking"] = 1
-	data["event_id"] = getEventId()
-	data["user_id"] = socket.gethostname()[4:]
-	data["raw_or_edited"] = "raw"
-	data["device_id"] = socket.gethostname()[4:]
-	data["downloaded"] = 0
-	data["link"] = "https://s3-us-west-2.amazonaws.com/users-raw-content/" + filename
-	data["created_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
-	data["updated_at"] = str(datetime.datetime.fromtimestamp(os.path.getmtime(path+filename)).isoformat("T"))
-	data["media_type"] = "video"
-	data["downloaded"] = 0
-	data["date"] = str(today)
-	data["date_time"] = str(now)
-	data["gif_link"] = ""
-	# data["media_length"] = 0.0
-	# data["media_size"] = 0.0
-	# data["user_rating"] = 0
-	# data["curator_rating"] = 0
-	# data["bitrate"] = 0
-	# data["total_bitrate"] = 0
-	json_data = json.dumps(data)
+def aws_upload(path, filename):
+        # Tries to upload video
+        with open(path+filename, 'rb') as f:
+                conn.upload(filename, f)
 
-	try:
-		# Tries to upload video
-		with open(path+filename, 'rb') as f:
-			conn.upload(filename, f)
-			print(filename + " successfully uploaded!")
-			logger.info(filename + " uploaded successfully.")
+        try:
+            upload_cloudinary(USER_ID, filename)
+            logger.info("Cloudinary trigger upload for {} success.".format(filename))
+        except (httplib.CannotSendRequest, httplib.BadStatusLine, httplib.ResponseNotReady) as e:
+            logger.error(str(e))
 
-		upload_cloudinary(socket.gethostname()[:4], filename)
-
-		# Tries to update API
-		try:
-			requests.post(url=API_ENDPOINT,data=json_data)
-			logger.info("metadata for " + filename + " uploaded successfully.")
-		except:
-			logger.error("metadata for " + filename + " failed to upload.")
-
-	# Logs upload failure
-	except requests.ConnectionError:
-		print(filename + " failed to upload.")
-		logger.error(filename + " failed to upload.")
-		raise ValueError("Upload failed.")
-
-path = '/home/pi/pikrellcam/media/videos/'
-list = sorted(glob.glob(path + '*.mp4'),key=os.path.getmtime)
-dest = '/home/pi/Videos/'
-
+# TODO: refactor this to be asynchronous signals not a loop always running :(
+# TODO: add in better logging where possible and more specific exception handling
+# TODO: remove unecessary sleeps when stability is established
+# TODO: refactor class constants and parameters
 while True:
 	# Uploads in the presence of wifi. Uploads in chronological order and removes it from the upload folder if successful
 	if not subprocess.check_output(['hostname','-I']).isspace():
@@ -176,12 +121,23 @@ while True:
 			video = os.path.basename(item)
 			# Tries uploading video. Moves video and removes it from the list if successful. Otherwise, it stays in the list
 			try:
-				upload(path, video)
-				os.rename(item, dest + video)
+                                aws_upload(TO_UPLOAD_PATH, video)
+                                # does not move video unless AWS upload is exception free
+				os.rename(item, UPLOADED_PATH + video)
 				list = list[1:]
+                                logger.info("AWS upload for {} success.".format(video))
 			except Exception as e:
-                                logger.error("{} upload / move failed.".format(video))
-				pass
+                                logger.error(str(e))
 		else:
-			list = sorted(glob.glob(path + '*.mp4'),key=os.path.getmtime)
-		time.sleep(2)
+			list = sorted(glob.glob(TO_UPLOAD_PATH + '*.mp4'),key=os.path.getmtime)
+                        if len(list) == 0: 
+                            # wait 5 seconds to check for new videos if none
+                            if not UPLOAD_COMPLETE_MESSAGE:
+                                logger.info("All video uploads are complete.") 
+                                UPLOAD_COMPLETE_MESSAGE = True
+		            time.sleep(5)
+                        elif len(list) > 0: 
+                            UPLOAD_COMPLETE_MESSAGE = False
+        else:
+            # wait a few seconds to check for WiFi
+            time.sleep(10) 

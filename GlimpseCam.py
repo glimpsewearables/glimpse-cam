@@ -125,7 +125,7 @@ def checkCamera():
                     # TODO: what does this do?
                     ps.wait()
             except sub.CalledProcessError:
-                    logger.error("pikrellcam is no longer running")
+                    logger.error("pikrellcam is no longer running.")
                     restartCamera()
         except OSError, ValueError:
             logger.error("failed to open process list.");
@@ -157,6 +157,9 @@ def buttonPressResponse():
 # for the button press (GPIO.interrupt)
 # TODO: remove all shell=True for security and stability
 # Main loop
+# TODO; add in more specific exception handling so that only expected exceptions are handled,
+# we don't want to mask exceptions that we don't expect. Check out uploadFile.py for better
+# exception handling and logging patterns by always making calling function deal with exception.
 while True:
         # True if the button has been pressed
 	buttonPressed = not GPIO.input(12)
