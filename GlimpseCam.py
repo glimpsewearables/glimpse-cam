@@ -1,15 +1,4 @@
-#!/usr/bin/env python
-
-import time, datetime, os, glob, socket, signal
-import RPi.GPIO as GPIO
-import subprocess as sub
-import sys
-import logging
-
-BUZZER_PIN = 5
-BUZZER_HIGH = 12
-
-def signal_handler(sig, frame):
+#!/usr/bin/env python import time, datetime, os, glob, socket, signal import RPi.GPIO as GPIO import subprocess as sub import sys import logging BUZZER_PIN = 5 BUZZER_HIGH = 12 def signal_handler(sig, frame):
     logger.info("stopped by keyboard interrupt.")
     logger.info("graceful exit.")
     GPIO.cleanup()
@@ -112,9 +101,10 @@ def restartCamera():
         # TODO: remove this sleep
         time.sleep(1)
     except sub.CalledProcessError:
-        logger.error("restart pikrellcam failed.")
+        raise RuntimeError("restart pikrellcam failed.")
 
 
+# Raises RuntimeError
 def checkCamera():
         try:
             # check all processes
@@ -126,9 +116,12 @@ def checkCamera():
                     ps.wait()
             except sub.CalledProcessError:
                     logger.error("pikrellcam is no longer running.")
-                    restartCamera()
+                    try:
+                        restartCamera()
+                    except RuntimeError:
+                        logger.error(str(e))
         except OSError, ValueError:
-            logger.error("failed to open process list.");
+            raise RuntimeError("failed to open process list.");
 
 	
 # After booting, motor buzzes twice
@@ -138,20 +131,22 @@ GPIO.setup(5, GPIO.OUT)
 
 buzzMotor2()
 
+# Raises RuntimeError if fails to record
 def record10(): 
     try:
         sub.check_call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
         logger.info("pikrellcam record success.")
-	time.sleep(15)
+        # sleep only for 10 seconds since this is the time to record
+	time.sleep(10)
     except sub.CalledProcessError:
-        logger.error("pikrellcam record failure.")
+        raise RuntimeError("pikrellcam record failure.")
 
 def buttonPressResponse():
     try:
         buzzMotor(1.0)
         logger.info("buzz motor success.")
     except:
-        logger.info("buzz motor failure.")
+        raise RuntimeError("buzz motor failure.")
 
 # TODO: the "Main loop" code should be called by a signal listening
 # for the button press (GPIO.interrupt)
@@ -163,16 +158,20 @@ def buttonPressResponse():
 while True:
         # True if the button has been pressed
 	buttonPressed = not GPIO.input(12)
-	checkCamera()
+        # Always check the camera is running
+        try:
+	    checkCamera()
+        except RuntimeError:
+            logger.error(str(e))
         # TODO: this condition is supposed to ensures a
         # button press will not interrupt a button press that has
         # happened, although the thread sleeps so it can never reach
         # this state. Preserving for sanity... for now.
-	if (buttonPressed and not prevButtonPress):
+        # if button pressed and not prevButtonPressed
+        if buttonPressed: 
             logger.info("button pressed, starting record.")
-            buttonPressResponse()
-            record10()
-        elif (buttonPressed):
-            logger.info("button pressed during record.")
-	time.sleep(0.01)
-	prevButtonPress = buttonPressed
+            try:
+                buttonPressResponse()
+                record10()
+            except RuntimeError:
+                logger.error(str(e))
