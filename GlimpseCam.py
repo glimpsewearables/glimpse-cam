@@ -1,4 +1,14 @@
-#!/usr/bin/env python import time, datetime, os, glob, socket, signal import RPi.GPIO as GPIO import subprocess as sub import sys import logging BUZZER_PIN = 5 BUZZER_HIGH = 12 def signal_handler(sig, frame):
+#!/usr/bin/env python 
+import time, datetime, os, glob, socket, signal 
+import RPi.GPIO as GPIO 
+import subprocess as sub 
+import sys 
+import logging 
+
+BUZZER_PIN = 5 
+BUZZER_HIGH = 12 
+
+def signal_handler(sig, frame):
     logger.info("stopped by keyboard interrupt.")
     logger.info("graceful exit.")
     GPIO.cleanup()
