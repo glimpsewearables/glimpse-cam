@@ -27,7 +27,8 @@ try:
     access = l[0]
     secret = l[1]
 
-    USER_ID = socket.gethostname()[:4]
+    USER_ID = socket.gethostname()
+    logger.info("Hostname: {}".format(USER_ID))
 
     # API endpoint to send data
     API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
