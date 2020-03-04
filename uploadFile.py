@@ -78,9 +78,9 @@ def upload_cloudinary(user_id, filename):
 
         # Retry Cloudinary trigger until success or at most 3 times
         while not cloudinary_return and cloudinary_attempts < 3:
+            cloudinary_attempts += 1
             try:
                 resp = httpConn.getresponse()
-                cloudinary_attempts += 1
                 if resp.status != 200:
                         # Cloudinary failed, return from method
                         raise httplib.BadStatusLine("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
@@ -133,7 +133,7 @@ while True:
                         if len(list) == 0: 
                             # wait 5 seconds to check for new videos if none
                             if not UPLOAD_COMPLETE_MESSAGE:
-                                logger.info("All video uploads are complete.") 
+                                logger.info("all video uploads are complete.") 
                                 UPLOAD_COMPLETE_MESSAGE = True
 		            time.sleep(5)
                         elif len(list) > 0: 
