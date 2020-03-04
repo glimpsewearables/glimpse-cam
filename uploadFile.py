@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import tinys3, socket, os, time, subprocess, requests, glob, httplib 
 from getLines import retKey
 import logging
@@ -88,7 +87,7 @@ def upload_cloudinary(user_id, filename):
                         # Read the response to enabled next request
                         resp.read()
                         cloudinary_return = True
-            except httplip.ResponseNotReady as e:
+            except httplib.ResponseNotReady as e:
                 logger.info("Cloudinary HTTP response for {} not ready after attempt {}, retrying...".format(req_url, cloudinary_attempts))
         
         # The request never returned
