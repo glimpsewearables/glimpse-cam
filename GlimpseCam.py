@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import time, datetime, os, glob, socket, signal 
 import RPi.GPIO as GPIO 
 import subprocess as sub 
@@ -7,18 +9,20 @@ from gpiozero import Button
 
 # Global variables
 BUZZER_PIN = 5 
+BATTERY_PIN = 4
 BUTTON_PIN = 12 
 LOGGER = None
 RECORD_BUTTON = None
-CAMERA = None
 SHUTDOWN = False
+CAMERA = None
+BATTERY = None
 
 def signal_handler(sig, frame):
+    global SHUTDOWN
     SHUTDOWN = True # DO NOT REMOVE
     LOGGER.info("stopped by keyboard interrupt.")
     LOGGER.info("graceful exit.")
-    GPIO.cleanup()
-    sys.exit(0)
+    GPIO.cleanup(BUZZER_PIN)
 
 def buzzMotor(interval = 0.75):
 	GPIO.output(BUZZER_PIN, GPIO.HIGH)
@@ -54,45 +58,52 @@ def buttonPressResponse():
     except:
         raise RuntimeError("buzz motor failure.")
 
-def restartCamera():
-    try: 
-        if CAMERA:
-            CAMERA.kill()
-            CAMERA = sub.Popen(['/home/pi/pikrellcam/pikrellcam'])
-            LOGGER.info("restart pikrellcam success.")
-        else:
-            LOGGER.error("pikrellcam restart called with no camera started.")
-    except OSError, ValueError:
-        raise RuntimeError("restart pikrellcam failed.")
-
-
 # Raises RuntimeError
 def checkCamera():
+    global CAMERA
     try:
-        CAMERA.poll()
-        if CAMERA.returncode: 
+        if CAMERA:
+            CAMERA.poll()
+            if not CAMERA.returncode: 
+                return True
             LOGGER.error("pikrellcam is no longer running.")
-            try:
-                restartCamera()
-            except RuntimeError as e:
-                LOGGER.error(str(e))
+        else:
+            LOGGER.error("pikrellcam check called with no camera started.")
+        return False
     except Exception as e:
         LOGGER.error(str(e))
-        raise RuntimeError("failed to open process list.");
+        raise RuntimeError("failed to check camera.");
 
 def startCamera():
+    global CAMERA
     try:
         CAMERA = sub.Popen(['/home/pi/pikrellcam/pikrellcam'])
         LOGGER.info("pikrellcam start success.")
     except OSError, ValueError:
-        LOGGER.error("pikrellcam start failed.")
+        raise RuntimeError("pikrellcam start failed.")
 
-# TODO: the "Main loop" code should be called by a signal listening
-# for the button press (GPIO.interrupt)
-# Main loop
-# TODO; add in more specific exception handling so that only expected exceptions are handled,
-# we don't want to mask exceptions that we don't expect. Check out uploadFile.py for better
-# exception handling and logging patterns by always making calling function deal with exception.
+def killCamera():
+    global CAMERA
+    try:
+        if CAMERA:
+            CAMERA.poll()
+            if CAMERA.returncode:
+                CAMERA.kill()
+    except Exception as e:
+        LOGGER.error(str(e))
+        LOGGER.error("failed to kill camera.")
+
+
+def runCamera():
+    while not SHUTDOWN:
+        # just keep the camera running for now 
+        # and let the callbacks handle the rest
+        try:
+            if not checkCamera():
+                startCamera()
+        except RuntimeError as e:
+            LOGGER.error(str(e))
+    killCamera()
 
 def triggerRecord():
     try:
@@ -103,55 +114,57 @@ def triggerRecord():
     except RuntimeError as e:
         LOGGER.error(str(e))
 
+def lowBatteryLog():
+    LOGGER.info("low battery.")
+
 def setupCallbacks():
     try:
         RECORD_BUTTON.when_pressed = triggerRecord
+        BATTERY.when_pressed = lowBatteryLog
         LOGGER.info("setup callbacks success.")
     except Exception as e:
         LOGGER.error(str(e))
         raise RuntimeError("setup callbacks failure.")
 
-def runCamera():
-    while not SHUTDOWN:
-        # just keep the camera running for now 
-        # and let the callbacks handle the rest
-        try:
-            checkCamera()
-        except RuntimeError as e:
-            LOGGER.error(str(e))
+def setupLogger():
+    # Sets up log, if this fails we're screwed.
+    global LOGGER
+    logFormat='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s'
+    logging.basicConfig(
+            filename="glimpseLog.log",
+            level=logging.DEBUG,
+            format=logFormat
+    )
+    LOGGER = logging.getLogger()
+
+    # Add --console-log argument to add console logging
+    if len(sys.argv) > 1 and sys.argv[1] == '--console-log':
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setLevel(logging.DEBUG)
+        stdout_handler.setFormatter(logging.Formatter(logFormat))
+        LOGGER.addHandler(stdout_handler)
 
 if __name__=="__main__":
     # setup
     try: 
-        # Sets up log, if this fails we're screwed.
-        logFormat='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s'
-        logging.basicConfig(
-                filename="glimpseLog.log",
-                level=logging.DEBUG,
-                format=logFormat
-        )
-
-        LOGGER = logging.getLogger()
-
-        # Add --console-log argument to add console logging
-        if len(sys.argv) > 1 and sys.argv[1] == '--console-log':
-            stdout_handler = logging.StreamHandler(sys.stdout)
-            stdout_handler.setLevel(logging.DEBUG)
-            stdout_handler.setFormatter(logging.Formatter(logFormat))
-            LOGGER.addHandler(stdout_handler)
         # setup signal handler for kill signal
         signal.signal(signal.SIGINT, signal_handler)
 
+        setupLogger()
+
         # setup the Buzzer
         GPIO.setmode(GPIO.BCM)
-        #GPIO.setup(12, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(BUZZER_PIN, GPIO.OUT)
 
         # recognize Glimpse Cam Hardware
         RECORD_BUTTON = Button(BUTTON_PIN)
+        # low battery warning sent when pin 4 pulled low
+        # only read button click every 60s
+        BATTERY = Button(BATTERY_PIN, pull_up=False, bounce_time=60)
+
+        setupCallbacks()
 
         startCamera()
-        setupCallbacks()
 
         # buzz motor for success
         buzzMotor2()
