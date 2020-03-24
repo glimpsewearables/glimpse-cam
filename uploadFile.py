@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-import tinys3, socket, os, time, subprocess, requests, glob, httplib 
-from getLines import retKey
+import tinys3, socket, os, time, subprocess, requests, glob
 import logging
 import sys
 
@@ -27,26 +26,12 @@ try:
     access = l[0]
     secret = l[1]
 
-    USER_ID = socket.gethostname()
-    logger.info("Hostname: {}".format(USER_ID))
-
     # API endpoint to send data
-    API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
-
-    # Cloudinary URL 
-    CLOUDINARY_URL = "www.res.cloudinary.com"
-
-    # Cloudinary prefix
-    CLOUDINARY_METHOD = "/glimpse-wearables/video/upload"
-    
+    API_ENDPOINT = "http://api.glimpsewearables.com/api/media/
     TO_UPLOAD_PATH = '/home/pi/pikrellcam/media/videos/'
     list = sorted(glob.glob(TO_UPLOAD_PATH + '*.mp4'),key=os.path.getmtime)
     UPLOADED_PATH = '/home/pi/Videos/'
     UPLOAD_COMPLETE_MESSAGE = False
-
-    # Create global HTTP connection since these are expensive 
-    # TODO: maybe clean this up in a later iteration 
-    httpConn = httplib.HTTPConnection(CLOUDINARY_URL)
 
     # Starts aws s3 conncetion
     conn = tinys3.Connection(access, secret, tls=True, default_bucket='users-raw-content', endpoint="s3-us-west-2.amazonaws.com")
@@ -56,57 +41,10 @@ except:
     print(sys.exc_info()[0])
     raise
 
-# Hits cloudinary url to trigger file upload from AWS
-# Throws httplib.CannotSendRequest, httplib.BadStatusLine, httplib.IncompleteRead
-def upload_cloudinary(user_id, filename):
-
-	if not user_id:
-		raise httplib.CannotSendRequest("Cloudinary upload called with no user_id.")
-	if not filename:
-		raise httplib.CannotSendRequest("Cloudinary upload called with no filename.")
-	
-	req_url = "{}/{}/{}".format(CLOUDINARY_METHOD, user_id, filename)
-
-        try:
-            # Use HEAD since no data is required
-            httpConn.request("HEAD", req_url)
-        except Exception as e:
-                raise httplib.CannotSendRequest("Cloudinary request failed for {}.".format(req_url))
-
-        cloudinary_return = False
-        cloudinary_attempts = 0
-
-        # Retry Cloudinary trigger until success or at most 3 times
-        while not cloudinary_return and cloudinary_attempts < 3:
-            cloudinary_attempts += 1
-            try:
-                resp = httpConn.getresponse()
-                if resp.status != 200:
-                        # Cloudinary failed, return from method
-                        raise httplib.BadStatusLine("Cloudinary HTTP HEAD status {} reason {} for {}.".format(resp.status, resp.reason, req_url))
-                else:
-                        # Read the response to enabled next request
-                        resp.read()
-                        cloudinary_return = True
-            except httplib.ResponseNotReady as e:
-                logger.info("Cloudinary HTTP response for {} not ready after attempt {}, retrying...".format(req_url, cloudinary_attempts))
-        
-        # The request never returned
-        if not cloudinary_return:
-                raise httplib.IncompleteRead("Cloudinary HTTP request for {} never returned.".format(req_url))
-
-# Return True if success False if failure
-# Function to upload file
 def aws_upload(path, filename):
         # Tries to upload video
         with open(path+filename, 'rb') as f:
                 conn.upload(filename, f)
-
-        try:
-            upload_cloudinary(USER_ID, filename)
-            logger.info("Cloudinary trigger upload for {} success.".format(filename))
-        except (httplib.CannotSendRequest, httplib.BadStatusLine, httplib.ResponseNotReady) as e:
-            logger.error(str(e))
 
 # TODO: refactor this to be asynchronous signals not a loop always running :(
 # TODO: add in better logging where possible and more specific exception handling
