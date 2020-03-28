@@ -27,7 +27,7 @@ try:
     secret = l[1]
 
     # API endpoint to send data
-    API_ENDPOINT = "http://api.glimpsewearables.com/api/media/
+    API_ENDPOINT = "http://api.glimpsewearables.com/api/media/"
     TO_UPLOAD_PATH = '/home/pi/pikrellcam/media/videos/'
     list = sorted(glob.glob(TO_UPLOAD_PATH + '*.mp4'),key=os.path.getmtime)
     UPLOADED_PATH = '/home/pi/Videos/'
