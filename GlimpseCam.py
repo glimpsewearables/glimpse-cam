@@ -90,10 +90,7 @@ def startCamera():
 def killCamera():
     global CAMERA
     try:
-        if CAMERA:
-            CAMERA.poll()
-            if CAMERA.returncode:
-                CAMERA.kill()
+        CAMERA.kill()
     except Exception as e:
         LOGGER.error(str(e))
         LOGGER.error("failed to kill camera.")
