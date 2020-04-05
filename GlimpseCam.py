@@ -16,6 +16,9 @@ RECORD_BUTTON = None
 SHUTDOWN = False
 CAMERA = None
 BATTERY = None
+CAMERA_COMMAND = ['/home/pi/pikrellcam/pikrellcam']
+RECORD_TIME = 10
+RECORD_COMMAND = ['echo', '"record on {} {}"'.format(RECORD_TIME, RECORD_TIME), '>', '/home/pi/pikrellcam/www/FIFO']
 
 def signal_handler(sig, frame):
     global SHUTDOWN
@@ -42,12 +45,12 @@ def buzzMotor2():
         buzzMotor(0.25)
 
 # Raises RuntimeError if fails to record
-def record10(): 
+def record(): 
+    global RECORD_COMMAND
     try:
-        sub.check_call('echo "record on 10 10" > /home/pi/pikrellcam/www/FIFO', shell=True)
-        LOGGER.info("pikrellcam record success.")
-        # sleep only for 10 seconds since this is the time to record
-	time.sleep(10)
+        sub.check_call(RECORD_COMMAND)
+        LOGGER.info("pikrellcam record start success.")
+	time.sleep(RECORD_TIME)
     except sub.CalledProcessError:
         raise RuntimeError("pikrellcam record failure.")
 
@@ -64,8 +67,10 @@ def checkCamera():
     try:
         if CAMERA:
             CAMERA.poll()
-            if not CAMERA.returncode: 
+            if CAMERA.returncode is None: 
                 return True
+            else: 
+                killCamera()
             LOGGER.error("pikrellcam is no longer running.")
         else:
             LOGGER.error("pikrellcam check called with no camera started.")
@@ -75,9 +80,9 @@ def checkCamera():
         raise RuntimeError("failed to check camera.");
 
 def startCamera():
-    global CAMERA
+    global CAMERA, CAMERA_COMMAND
     try:
-        CAMERA = sub.Popen(['/home/pi/pikrellcam/pikrellcam'])
+        CAMERA = sub.Popen(CAMERA_COMMAND)
         LOGGER.info("pikrellcam start success.")
     except OSError, ValueError:
         raise RuntimeError("pikrellcam start failed.")
@@ -109,7 +114,7 @@ def triggerRecord():
     try:
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
-        record10()
+        record()
         LOGGER.info("record finished.")
     except RuntimeError as e:
         LOGGER.error(str(e))
@@ -144,6 +149,14 @@ def setupLogger():
         stdout_handler.setFormatter(logging.Formatter(logFormat))
         LOGGER.addHandler(stdout_handler)
 
+def setupFakeCamera():
+    global CAMERA_COMMAND, RECORD_COMMAND
+    # represents a fake pikrellcam that will die every 1 minute
+    CAMERA_COMMAND = ['sleep', '1m']
+    # represent a fake record action that takes 0.1s to complete
+    RECORD_COMMAND = ['sleep', '0.1s']
+    
+
 if __name__=="__main__":
     # setup
     try: 
@@ -151,6 +164,9 @@ if __name__=="__main__":
         signal.signal(signal.SIGINT, signal_handler)
 
         setupLogger()
+
+        if len(sys.argv) > 2 and sys.argv[2] == "--fake-cam":
+            setupFakeCamera()
 
         # setup the Buzzer
         GPIO.setmode(GPIO.BCM)

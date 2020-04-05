@@ -2,3 +2,5 @@
 .DS_Store
 .vscode/
 errorLog.log
+uploadLog.log
+glimpseLog.log
