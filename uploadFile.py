@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 import tinys3, socket, os, time, subprocess, requests, glob
-from getLines import retKey
 import logging
 import sys
+
+def retKey():
+    lines = []
+    with open("/home/pi/glimpse-cam/keys.txt") as f:
+        for line in f:
+            lines.append(line.strip())
+    return lines
 
 try: 
     # Sets up log
