@@ -18,7 +18,7 @@ CAMERA = None
 BATTERY = None
 CAMERA_COMMAND = ['/home/pi/pikrellcam/pikrellcam']
 RECORD_TIME = 10
-RECORD_COMMAND = ['echo', '"record on {} {}"'.format(RECORD_TIME, RECORD_TIME), '>', '/home/pi/pikrellcam/www/FIFO']
+RECORD_COMMAND = 'echo "record on {} {}" > /home/pi/pikrellcam/www/FIFO'.format(RECORD_TIME, RECORD_TIME)
 
 def signal_handler(sig, frame):
     global SHUTDOWN
@@ -48,7 +48,7 @@ def buzzMotor2():
 def record(): 
     global RECORD_COMMAND
     try:
-        sub.check_call(RECORD_COMMAND)
+        sub.check_call(RECORD_COMMAND, shell=True)
         LOGGER.info("pikrellcam record start success.")
 	time.sleep(RECORD_TIME)
     except sub.CalledProcessError:
@@ -90,7 +90,8 @@ def startCamera():
 def killCamera():
     global CAMERA
     try:
-        CAMERA.kill()
+        if CAMERA is not None:
+            CAMERA.kill()
     except Exception as e:
         LOGGER.error(str(e))
         LOGGER.error("failed to kill camera.")
@@ -151,7 +152,7 @@ def setupFakeCamera():
     # represents a fake pikrellcam that will die every 1 minute
     CAMERA_COMMAND = ['sleep', '1m']
     # represent a fake record action that takes 0.1s to complete
-    RECORD_COMMAND = ['sleep', '0.1s']
+    RECORD_COMMAND = 'sleep 0.1s'
     
 
 if __name__=="__main__":
