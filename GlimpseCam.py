@@ -80,12 +80,11 @@ def checkCamera():
             CAMERA.poll()
             if CAMERA.returncode is None: 
                 return True
-            else: 
-                # camera has exited, kill in script
+            else:
                 killCamera()
             LOGGER.error("pikrellcam was started in this process but is no longer running.")
         elif CAMERA_PROCESS_NAME in sub.check_output(['ps', '-A'], shell=True):
-            LOGGER.info("pikrellcam is running in seperate process.")
+            # LOGGER.info("pikrellcam is running in seperate process.")
             return True
         return False
     except Exception as e:
@@ -199,8 +198,6 @@ if __name__=="__main__":
         setupLogger()
         LOGGER.info("setup logger success.")
     except Exception as e:
-        LOGGER.error("setup logger failed.")
-        LOGGER.error(str(e))
         print(sys.exc_info()[0])
         raise
 
@@ -214,6 +211,8 @@ if __name__=="__main__":
         print(sys.exc_info()[0])
         raise
 
+    # TODO: cleanup this logic to be agnostic of order
+    # cosider using a CLI library that handles arg parsing.
     if '--record-reg' in sys.argv:
         recordModal('RECORD_REG')
     elif '--record-retro' in sys.argv:
