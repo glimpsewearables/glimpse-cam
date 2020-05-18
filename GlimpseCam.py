@@ -17,8 +17,12 @@ SHUTDOWN = False
 CAMERA = None
 BATTERY = None
 CAMERA_COMMAND = ['/home/pi/pikrellcam/pikrellcam']
+CAMERA_PROCESS_NAME = 'pikrellcam'
 RECORD_TIME = 10
-RECORD_COMMAND = 'echo "record on {} {}" > /home/pi/pikrellcam/www/FIFO'.format(RECORD_TIME, RECORD_TIME)
+RECORD_RETRO_COMMAND = 'echo "record on {} {}" > /home/pi/pikrellcam/www/FIFO'.format(RECORD_TIME, RECORD_TIME)
+RECORD_REG_COMMAND = 'echo "record on {}" > /home/pi/pikrellcam/www/FIFO'.format(RECORD_TIME, RECORD_TIME)
+STILL_COMMAND = 'echo "still" > /home/pi/pikrellcam/www/FIFO'
+MODE_MAP = {'RECORD_RETRO': RECORD_RETRO_COMMAND, 'RECORD_REG': RECORD_REG_COMMAND, 'STILL': STILL_COMMAND}
 
 def signal_handler(sig, frame):
     global SHUTDOWN
@@ -44,13 +48,15 @@ def buzzMotor2():
         time.sleep(0.2)
         buzzMotor(0.25)
 
-# Raises RuntimeError if fails to record
-def record(): 
-    global RECORD_COMMAND
+def recordModal(mode):
+    """
+    Sends command given by mode to pikrellcam FIFO.
+    Raises RuntimeError if process call fails.
+    """
+    global MODE_MAP
     try:
-        sub.check_call(RECORD_COMMAND, shell=True)
-        LOGGER.info("pikrellcam record start success.")
-	time.sleep(RECORD_TIME)
+        sub.check_call(MODE_MAP[mode], shell=True)
+        LOGGER.info("pikrellcam {} start success.".format(mode))
     except sub.CalledProcessError:
         raise RuntimeError("pikrellcam record failure.")
 
@@ -61,8 +67,13 @@ def buttonPressResponse():
     except:
         raise RuntimeError("buzz motor failure.")
 
-# Raises RuntimeError
 def checkCamera():
+    """ 
+    Checks if pikrellcam is running.
+    Return True if running in either this or another process.
+    Return False if not running.
+    Raise RuntimeError if check fails.
+    """
     global CAMERA
     try:
         if CAMERA:
@@ -70,10 +81,12 @@ def checkCamera():
             if CAMERA.returncode is None: 
                 return True
             else: 
+                # camera has exited, kill in script
                 killCamera()
-            LOGGER.error("pikrellcam is no longer running.")
-        else:
-            LOGGER.error("pikrellcam check called with no camera started.")
+            LOGGER.error("pikrellcam was started in this process but is no longer running.")
+        elif CAMERA_PROCESS_NAME in sub.check_output(['ps', '-A'], shell=True):
+            LOGGER.info("pikrellcam is running in seperate process.")
+            return True
         return False
     except Exception as e:
         LOGGER.error(str(e))
@@ -96,7 +109,6 @@ def killCamera():
         LOGGER.error(str(e))
         LOGGER.error("failed to kill camera.")
 
-
 def runCamera():
     while not SHUTDOWN:
         # just keep the camera running for now 
@@ -108,11 +120,12 @@ def runCamera():
             LOGGER.error(str(e))
     killCamera()
 
-def triggerRecord():
+def triggerDeviceRecord():
     try:
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
-        record()
+        recordModal('RECORD_RETRO')
+        time.sleep(RECORD_TIME)
         LOGGER.info("record finished.")
     except RuntimeError as e:
         LOGGER.error(str(e))
@@ -122,7 +135,7 @@ def lowBatteryLog():
 
 def setupCallbacks():
     try:
-        RECORD_BUTTON.when_pressed = triggerRecord
+        RECORD_BUTTON.when_pressed = triggerDeviceRecord
         BATTERY.when_pressed = lowBatteryLog
         LOGGER.info("setup callbacks success.")
     except Exception as e:
@@ -141,54 +154,82 @@ def setupLogger():
     LOGGER = logging.getLogger()
 
     # Add --console-log argument to add console logging
-    if len(sys.argv) > 1 and sys.argv[1] == '--console-log':
+    if '--console-log' in sys.argv:
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setLevel(logging.DEBUG)
         stdout_handler.setFormatter(logging.Formatter(logFormat))
         LOGGER.addHandler(stdout_handler)
 
 def setupFakeCamera():
-    global CAMERA_COMMAND, RECORD_COMMAND
+    global CAMERA_COMMAND, CAMERA_PROCESS_NAME, MODE_MAP
     # represents a fake pikrellcam that will die every 1 minute
     CAMERA_COMMAND = ['sleep', '1m']
-    # represent a fake record action that takes 0.1s to complete
-    RECORD_COMMAND = 'sleep 0.1s'
-    
+    # configure process to match pikrellcam command
+    CAMERA_PROCESS_NAME = 'sleep'
+    # set all mode actions to a fake command 
+    MODE_MAP = dict.fromkeys(MODE_MAP, 'echo "fake camera mode"')
 
-if __name__=="__main__":
-    # setup
-    try: 
-        # setup signal handler for kill signal
-        signal.signal(signal.SIGINT, signal_handler)
 
-        setupLogger()
-
-        if len(sys.argv) > 2 and sys.argv[2] == "--fake-cam":
-            setupFakeCamera()
-
-        # setup the Buzzer
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(BUZZER_PIN, GPIO.OUT)
-
-        # recognize Glimpse Cam Hardware
-        RECORD_BUTTON = Button(BUTTON_PIN)
-        # low battery warning sent when pin 4 pulled low
-        # only read button click every 60s
-        BATTERY = Button(BATTERY_PIN, pull_up=False, bounce_time=60)
-
-        setupCallbacks()
-
+def setupCamera():
+    if '--fake-cam' in sys.argv:
+        setupFakeCamera()
+    # check if the camera is setup
+    if not checkCamera():
+        # if not then setup the camera
         startCamera()
 
-        # buzz motor for success
-        buzzMotor2()
+def setupDevice():
+    global RECORD_BUTTON, BATTERY
+    # setup the Buzzer
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(BUZZER_PIN, GPIO.OUT)
 
-        LOGGER.info("setup success.")
+    # recognize Glimpse Cam Hardware
+    RECORD_BUTTON = Button(BUTTON_PIN)
+    # low battery warning sent when pin 4 pulled low
+    # only read button click every 60s
+    BATTERY = Button(BATTERY_PIN, pull_up=False, bounce_time=60)
+    setupCallbacks()
+    # buzz motor for success
+    buzzMotor2()
+
+if __name__=="__main__":
+    # setup logger always
+    try: 
+        setupLogger()
+        LOGGER.info("setup logger success.")
     except Exception as e:
-        LOGGER.error("setup failed.")
+        LOGGER.error("setup logger failed.")
         LOGGER.error(str(e))
         print(sys.exc_info()[0])
         raise
 
-    # run the camera
-    runCamera()
+    # setup camera always
+    try: 
+        setupCamera()
+        LOGGER.info("setup camera success.")
+    except Exception as e:
+        LOGGER.error("setup camera failed.")
+        LOGGER.error(str(e))
+        print(sys.exc_info()[0])
+        raise
+
+    if '--record-reg' in sys.argv:
+        recordModal('RECORD_REG')
+    elif '--record-retro' in sys.argv:
+        recordModal('RECORD_RETRO')
+    elif '--still' in sys.argv:
+        recordModal('STILL')
+    else:
+        # setup and run device
+        try: 
+            signal.signal(signal.SIGINT, signal_handler)
+            setupDevice()
+            LOGGER.info("setup device success.")
+        except Exception as e:
+            LOGGER.error("setup device failed.")
+            LOGGER.error(str(e))
+            print(sys.exc_info()[0])
+            raise
+        # run the camera
+        runCamera()
