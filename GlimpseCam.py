@@ -23,6 +23,7 @@ RECORD_RETRO_COMMAND = 'echo "record on {} {}" > /home/pi/pikrellcam/www/FIFO'.f
 RECORD_REG_COMMAND = 'echo "record on {}" > /home/pi/pikrellcam/www/FIFO'.format(RECORD_TIME, RECORD_TIME)
 STILL_COMMAND = 'echo "still" > /home/pi/pikrellcam/www/FIFO'
 MODE_MAP = {'RECORD_RETRO': RECORD_RETRO_COMMAND, 'RECORD_REG': RECORD_REG_COMMAND, 'STILL': STILL_COMMAND}
+USERNAME = 'raspberrypi'
 
 def signal_handler(sig, frame):
     global SHUTDOWN
@@ -66,6 +67,16 @@ def buttonPressResponse():
         LOGGER.info("buzz motor success.")
     except:
         raise RuntimeError("buzz motor failure.")
+
+def checkFile():
+        path = 'home/pi/pikrellcam/media/videos/'
+        file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime()) + '.mp4'
+        time.sleep(RECORD_TIME)
+        if (path.exists(path + file)):
+                LOGGER.info("File Creation Success")
+        else:
+                raise RuntimeError("File Creation Error")
+
 
 def checkCamera():
     """ 
@@ -112,18 +123,20 @@ def runCamera():
     while not SHUTDOWN:
         # just keep the camera running for now 
         # and let the callbacks handle the rest
-        try:
+	try:
             if not checkCamera():
                 startCamera()
         except RuntimeError as e:
             LOGGER.error(str(e))
+	time.sleep(.1)
     killCamera()
 
 def triggerDeviceRecord():
     try:
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
-        recordModal('RECORD_RETRO')
+	recordModal('RECORD_RETRO')
+	#checkFile()
         time.sleep(RECORD_TIME)
         LOGGER.info("record finished.")
     except RuntimeError as e:
