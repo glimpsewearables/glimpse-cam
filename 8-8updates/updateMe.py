@@ -1,5 +1,6 @@
 from subprocess import call
 from shutil import copyfile
+import time
 #copyfile(src, dst)
 #call(['npx', 'pinsfw.d', '--sp', '3030'])
 print "updating.."
