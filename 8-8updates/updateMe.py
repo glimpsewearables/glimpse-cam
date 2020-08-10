@@ -7,4 +7,4 @@ time.sleep(3)
 call.(["systemctl", "enable blink.service"])
 print "rebooting.."
 time.sleep(3)
-call.()
+call.{["reboot"]}
