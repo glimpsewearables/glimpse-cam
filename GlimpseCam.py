@@ -69,7 +69,7 @@ def buttonPressResponse():
         raise RuntimeError("buzz motor failure.")
 
 def checkFile():
-        path = 'home/pi/pikrellcam/media/videos/'
+        path = '/home/pi/pikrellcam/media/videos/'
         file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime()) + '.mp4'
         time.sleep(RECORD_TIME)
         if (path.exists(path + file)):
@@ -136,7 +136,7 @@ def triggerDeviceRecord():
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
 	recordModal('RECORD_RETRO')
-	#checkFile()
+	checkFile()
         time.sleep(RECORD_TIME)
         LOGGER.info("record finished.")
     except RuntimeError as e:
@@ -159,7 +159,7 @@ def setupLogger():
     global LOGGER
     logFormat='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s'
     logging.basicConfig(
-            filename="glimpseLog.log",
+            filename="/home/pi/glimpse-cam/glimpseLog.log",
             level=logging.DEBUG,
             format=logFormat
     )
