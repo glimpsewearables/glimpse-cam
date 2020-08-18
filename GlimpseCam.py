@@ -7,6 +7,7 @@ import sys
 import logging 
 from gpiozero import Button
 
+
 # Global variables
 BUZZER_PIN = 5 
 BATTERY_PIN = 4
@@ -64,15 +65,14 @@ def recordModal(mode):
 def buttonPressResponse():
     try:
         buzzMotor(1.0)
-        LOGGER.info("buzz motor success.")
+	LOGGER.info("buzz motor success.")
     except:
         raise RuntimeError("buzz motor failure.")
 
-def checkFile():
-        path = '/home/pi/pikrellcam/media/videos/'
-        file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime()) + '.mp4'
-        time.sleep(RECORD_TIME)
-        if (path.exists(path + file)):
+def checkFile(file):
+	LOGGER.info(file)
+	time.sleep(2.0)
+        if (os.path.isfile("/home/pi/pikrellcam/media/videos/" + file)):
                 LOGGER.info("File Creation Success")
         else:
                 raise RuntimeError("File Creation Error")
@@ -135,10 +135,10 @@ def triggerDeviceRecord():
     try:
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
+	file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime(time.time()-10)) + '.mp4'
 	recordModal('RECORD_RETRO')
-	checkFile()
-        time.sleep(RECORD_TIME)
-        LOGGER.info("record finished.")
+	time.sleep(RECORD_TIME)
+	checkFile(file)
     except RuntimeError as e:
         LOGGER.error(str(e))
 
