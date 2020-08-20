@@ -25,6 +25,7 @@ RECORD_REG_COMMAND = 'echo "record on {}" > /home/pi/pikrellcam/www/FIFO'.format
 STILL_COMMAND = 'echo "still" > /home/pi/pikrellcam/www/FIFO'
 MODE_MAP = {'RECORD_RETRO': RECORD_RETRO_COMMAND, 'RECORD_REG': RECORD_REG_COMMAND, 'STILL': STILL_COMMAND}
 USERNAME = 'raspberrypi'
+VIDEO_FILE_PATH = "/home/pi/pikrellcam/media/videos/"
 
 def signal_handler(sig, frame):
     global SHUTDOWN
@@ -41,7 +42,6 @@ def buzzMotor(interval = 0.75):
 	GPIO.output(BUZZER_PIN, GPIO.HIGH)
 	time.sleep(interval)
 	GPIO.output(BUZZER_PIN, GPIO.LOW)
-
 
 def buzzMotor2():    
         buzzMotor(0.25)
@@ -69,14 +69,21 @@ def buttonPressResponse():
     except:
         raise RuntimeError("buzz motor failure.")
 
-def checkFile(file):
-	LOGGER.info(file)
+def checkFileBefore():
+	temp = len([name for name in os.listdir(VIDEO_FILE_PATH) if os.path.isfile(os.path.join(VIDEO_FILE_PATH, name))])
+	LOGGER.info(temp)
+	return temp
+
+def checkFileAfter(file, numBefore):
+	LOGGER.info("Checking for:" + file)
 	time.sleep(2.0)
-        if (os.path.isfile("/home/pi/pikrellcam/media/videos/" + file)):
+	currNum = checkFileBefore()
+        listOfFiles = glob.glob(VIDEO_FILE_PATH + "*.mp4")
+        mostRecentFile = max(listOfFiles, key=os.path.getctime) 
+        if (currNum - numBefore) == 1 and (os.path.isfile(mostRecentFile)):
                 LOGGER.info("File Creation Success")
         else:
-                raise RuntimeError("File Creation Error")
-
+                raise RuntimeError("File creation failure") 
 
 def checkCamera():
     """ 
@@ -135,10 +142,11 @@ def triggerDeviceRecord():
     try:
         LOGGER.info("button pressed, starting record.")
         buttonPressResponse()
-	file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime(time.time()-10)) + '.mp4'
+	file = USERNAME + '_video_' + time.strftime('%Y-%m-%d_%H.%M.%S', time.localtime(time.time() - 10)) + '.mp4'
+	numBefore = checkFileBefore()
 	recordModal('RECORD_RETRO')
 	time.sleep(RECORD_TIME)
-	checkFile(file)
+	checkFileAfter(file, numBefore)
     except RuntimeError as e:
         LOGGER.error(str(e))
 
