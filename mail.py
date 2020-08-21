@@ -2,8 +2,8 @@ import smtplib
 import subprocess
 hostname = subprocess.check_output(['hostname', '-I'])
 hostname = hostname.replace('\n', '')
-hostname = hostname.replace(' ', '')
-addr = hostname + ":3000"
+hostname = hostname.split(' ')
+addr = hostname[0] + ":4000"
  
 #Email Variables
 SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
@@ -35,8 +35,8 @@ class Emailer:
 sender = Emailer()
  
 sendTo = 'drose98@uw.edu'
-emailSubject = "Hello World"
-emailContent = "This is a test of my Emailer Class"
+emailSubject = "I'm online"
+emailContent = addr
  
 #Sends an email to the "sendTo" address with the specified "emailSubject" as the subject and "emailContent" as the email content.
 sender.sendmail(sendTo, emailSubject, emailContent)  
