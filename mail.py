@@ -34,7 +34,7 @@ class Emailer:
  
 sender = Emailer()
  
-sendTo = 'drose98@uw.edu'
+sendTo = 'mike@glimpsewearables.com'
 emailSubject = "I'm online"
 emailContent = addr
  
