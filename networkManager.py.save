@@ -1,0 +1,6 @@
+import subprocess
+
+i = 0
+while i = 0:
+	addr = subprocess.check_output(['hostname -I'])
+	addr = addr.replace("

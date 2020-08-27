@@ -1,5 +1,5 @@
 [Unit]
-Description=my only-once script
+Description=webApp
 
 [Service]
 Type=oneshot

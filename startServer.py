@@ -1,5 +1,6 @@
 from subprocess import call
+import os
 
-call(['npx', 'pinsfw.d', '--sp', '40005'])
+call(['npx', 'pinsfw.d', 'index', '--sp', '5'])
 
 
