@@ -9,7 +9,7 @@ addr = hostname[0]
 SMTP_SERVER = 'smtp.gmail.com' #Email Server (don't change!)
 SMTP_PORT = 587 #Server Port (don't change!)
 GMAIL_USERNAME = 'dmrose100@gmail.com' #change this to match your gmail account
-GMAIL_PASSWORD = 'Mannyb123'  #change this to match your gmail password
+GMAIL_PASSWORD = ''  #change this to match your gmail password
  
 class Emailer:
 	def sendmail(self, recipient, subject, content):
